@@ -10,16 +10,32 @@ class ApolloApp(APIApplication):
 
     def get_cards(self, accountId: Annotated[Any, 'Id da conta do core brancário'] = None, cardId: Annotated[Any, 'Id do cartão'] = None, document: Annotated[Any, 'Documento'] = None, endCancelDate: Annotated[Any, 'Data final do cancelamento do cartão'] = None, endCreateDate: Annotated[Any, 'Data final da criação do cartão'] = None, endEmbossDate: Annotated[Any, 'Data final do emboçamento do cartão'] = None, id: Annotated[Any, 'Id do registro'] = None, limit: Annotated[Any, 'Limite de registros por página'] = None, page: Annotated[Any, 'Página atual'] = None, startCancelDate: Annotated[Any, 'Data inicial do cancelamento do cartão'] = None, startCreateDate: Annotated[Any, 'Data inicial da criação do cartão'] = None, startEmbossDate: Annotated[Any, 'Data inicial do emboçamento do cartão'] = None, status: Annotated[Any, 'Status do cartão (processing/ created/ active/ blocked/ canceled)'] = None) -> dict[str, Any]:
         """
-        Get Cards. Objetivo: Buscar cartões dos clientes.  
-
-Basicamente as informações retornadas são:
-- "cards": Lista de todos os cartões físicos do cliente.
-- "cards"."virtualCard": Cartão virtual atrelado ao cartão físico.
+        Retrieve card details from the banking core system, optionally filtered by various parameters including dates, status, and identifiers. Returns both physical and linked virtual cards.
         
-        Tags: Apollo Card API
+        Args:
+            accountId: Id da conta do core brancário
+            cardId: Id do cartão
+            document: Documento
+            endCancelDate: Data final do cancelamento do cartão
+            endCreateDate: Data final da criação do cartão
+            endEmbossDate: Data final do emboçamento do cartão
+            id: Id do registro
+            limit: Limite de registros por página
+            page: Página atual
+            startCancelDate: Data inicial do cancelamento do cartão
+            startCreateDate: Data inicial da criação do cartão
+            startEmbossDate: Data inicial do emboçamento do cartão
+            status: Status do cartão (processing/created/active/blocked/canceled)
         
+        Returns:
+            Dictionary containing a 'cards' list with physical cards and their linked virtual cards
+        
+        Raises:
+            requests.exceptions.HTTPError: Raised when the API request fails due to HTTP errors (e.g., 4xx/5xx responses)
+        
+        Tags:
+            retrieve, list, card-api, async_job, management, important
         """
-        
         path = ""
         url = f"{self.base_url}{path}"
         query_params = {
@@ -44,23 +60,23 @@ Basicamente as informações retornadas são:
 
     def card_request(self, accountId: Annotated[Any, ''] = None, cardId: Annotated[Any, ''] = None, externalPrivateLabelAccountId: Annotated[Any, ''] = None, partner: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
         """
-        Card Request. Objetivo: Solicitar a criação de um novo cartão pré-pago.
-A cada chamada deste método um novo cartão físico é solicitado para o cliente, podendo ele ter mais de um cartão.    
-
-A criação do cartão ocorre de forma assíncrona, tendo sua confirmação através de webhook específico. Neste momento o cartão fica com status "processing".    
-
-O uso deste método é obrigatório mesmo que o cliente só vá usar cartão virtual, pois o cartão virtual sempre é atrelado internamente à um físico mesmo sem ser embossado.    
-
-Basicamente devem ser enviadas as seguintes informações:
-- “accountId”:  Código da conta do cliente
-- “document”: CPF ou CNPJ do cliente
-- “address”: Endereço de correspondência para envio do cartão físico.
-
+        Requests the creation of a new prepaid card. This method initiates an asynchronous card creation process and always requires a physical card, even for virtual cards.
         
-        Tags: Apollo Authorize API
+        Args:
+            accountId: Account ID of the client.
+            cardId: ID of the card.
+            externalPrivateLabelAccountId: External private label account ID.
+            partner: Partner details in dictionary format.
         
+        Returns:
+            A dictionary containing the response data.
+        
+        Raises:
+            requests.HTTPError: Raised if the HTTP request returns an unsuccessful status code.
+        
+        Tags:
+            create, card, prepaid, important
         """
-        
         request_body = {
             "accountId": accountId,
             "cardId": cardId,
@@ -77,20 +93,26 @@ Basicamente devem ser enviadas as seguintes informações:
 
     def webhook_card_created(self, bin: Annotated[Any, ''] = None, cardId: Annotated[Any, ''] = None, id: Annotated[Any, ''] = None, last4Digits: Annotated[Any, ''] = None, privateLabelAccount: Annotated[dict[str, Any], ''] = None, token: Annotated[Any, ''] = None, validThru: Annotated[Any, ''] = None) -> Any:
         """
-        Webhook Card Created. Objetivo: Confirmar solicitação de criação de um cartão físico.   
-
-Este método deve ser executado pela empresa emissora do cartão (Orbitall).  
-
-Neste momento o cartão muda seu status de "Processing" para "Created".  
-
-De acordo com a configuração do parceiro, neste momento o cartão físico será embossado automaticamente.  
-
-De acordo com a configuração do parceiro, neste momento o cartão virtual será criado automaticamente.
+        Handles webhook notifications for card creation, transitioning the card status from 'Processing' to 'Created' and triggering automated embossing/virtual card generation based on partner configuration.
         
-        Tags: Apollo Card API
+        Args:
+            bin: Bank Identification Number (BIN) associated with the card
+            cardId: Unique identifier for the card being processed
+            id: System-generated identifier for the card creation request
+            last4Digits: Last four digits of the card number
+            privateLabelAccount: Dictionary containing private label account details (merchant-specific card configuration)
+            token: Security token associated with the card
+            validThru: Card expiration date in MM/YY format
         
+        Returns:
+            Parsed JSON response from the card processing API containing creation confirmation details
+        
+        Raises:
+            requests.HTTPError: Raised for 4XX/5XX responses from the API endpoint
+        
+        Tags:
+            card-api, webhook-handler, async-processing, status-update, orbitall-integration, physical-card, virtual-card, important
         """
-        
         request_body = {
             "bin": bin,
             "id": id,
@@ -112,16 +134,20 @@ De acordo com a configuração do parceiro, neste momento o cartão virtual ser�
 
     def try_webhook_card_created(self, ) -> Any:
         """
-        Try Webhook Card Created. Objetivo: Buscar as informações que viriam pelo webhook-card-created.  
-
-Utilizado caso haja alguma falha no webhook que informa quando uma solicitação de cartão foi aprovada.  
-
-As informações de dentro do "data" podem ser utilizados para passar no body do webhook-card-created caso seja necessário.
+        Attempts to retrieve card creation data when the webhook fails, providing equivalent information that would normally be delivered via webhook-card-created.
         
-        Tags: Apollo Card API
+        Args:
+            None: This method has no parameters.
         
+        Returns:
+            A JSON-parsed response containing card creation details equivalent to webhook payload data.
+        
+        Raises:
+            requests.exceptions.HTTPError: Raised when the HTTP request fails (status code >= 400).
+        
+        Tags:
+            webhook, card-created, api, fallback, important
         """
-        
         path = ""
         url = f"{self.base_url}{path}"
         query_params = {}
@@ -131,21 +157,17 @@ As informações de dentro do "data" podem ser utilizados para passar no body do
 
     def get_card(self, ) -> dict[str, Any]:
         """
-        Get Card. Objetivo: Buscar dados de um cartão.   
-
-Basicamente as informações retornadas são:
-- "card": Dados do cartão físico.
-- "card"."virtualCard": Dados do cartão virtual atrelado ao cartão físico.      
-
-
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
+        Retrieves detailed card information including physical card data and associated virtual card.
         
-        Tags: Apollo Card API
+        Returns:
+            Dictionary containing card details with keys 'card' (physical card data) and 'card.virtualCard' (associated virtual card data)
         
+        Raises:
+            requests.HTTPError: Raised for invalid API requests (4XX client errors or 5XX server errors)
+        
+        Tags:
+            retrieve, card, api, important
         """
-        
         path = ""
         url = f"{self.base_url}{path}"
         query_params = {}
@@ -155,19 +177,20 @@ Route param:
 
     def emboss(self, request_body: Annotated[Any, ''] = None) -> Any:
         """
-        Emboss. Objetivo: Embossamento do cartão físico.   
-
-Deve ser chamada depois que a solicitação do cartão foi confirmada (status "created").   
-
-Não altera o status do cartão.  
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
+        Embosses a physical card by sending a PATCH request to the specified URL with the provided request body.
         
-        Tags: Apollo Card API
+        Args:
+            request_body: Optional dictionary containing data for embossing request. Defaults to None.
         
+        Returns:
+            The JSON response from the server.
+        
+        Raises:
+            requests.HTTPError: Raised if the HTTP request returned an unsuccessful status code.
+        
+        Tags:
+            emboss, card-management, physical-card, update, important
         """
-        
         request_body = request_body
         path = ""
         url = f"{self.base_url}{path}"
@@ -178,20 +201,20 @@ Route param:
 
     def activate(self, request_body: Annotated[Any, ''] = None) -> Any:
         """
-        Activate. Objetivo: Ativar cartão físico.    
-
-Deve ser chamada quando usuário receber o cartão físico. Só é permitido chamar este método após 24 horas do embossamento.  
-
-Status do cartão é alterado para "active".   
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
-
+        Activates a physical card by sending a PATCH request to update its status to 'active'. This should be called after the user receives the card and not before 24 hours have passed since the embossing.
         
-        Tags: Apollo Card API
+        Args:
+            request_body: Optional request body (any type) for the activation request.
         
+        Returns:
+            Response data from the successful activation in JSON format.
+        
+        Raises:
+            HTTPError: Raised if the HTTP request returns an unsuccessful status code.
+        
+        Tags:
+            activate, card, management, important
         """
-        
         request_body = request_body
         path = ""
         url = f"{self.base_url}{path}"
@@ -202,20 +225,20 @@ Route param:
 
     def block(self, isVirtual: Annotated[bool, ''] = None) -> Any:
         """
-        Block. Objetivo: Bloquear temporariamente um cartão físico.  
-
-Status do cartão é alterado para "blocked".      
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
-
-Body:
-- isVirtual: Campo flag(bool) que indica se o bloqueio é referente ao cartão físico ou cartão virtual
+        Temporarily blocks a physical/virtual card by updating its status to 'blocked'.
         
-        Tags: Apollo Card API
+        Args:
+            isVirtual: Boolean flag indicating whether to block the virtual card (True) or physical card (False)
         
+        Returns:
+            JSON response containing the updated card status and details
+        
+        Raises:
+            requests.exceptions.HTTPError: Raised for invalid requests, authentication failures, or server errors when the API request fails
+        
+        Tags:
+            block, card-management, api, important
         """
-        
         request_body = {
             "isVirtual": isVirtual,
         }
@@ -229,20 +252,20 @@ Body:
 
     def unblock(self, isVirtual: Annotated[bool, ''] = None) -> Any:
         """
-        Unblock. Objetivo: Desbloquear temporariamente um cartão físico.
-
-Status do cartão é alterado para "active".      
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
-
-Body:
-- isVirtual: Campo flag(bool) que indica se o desbloqueio é referente ao cartão físico ou cartão virtual
+        Unblocks a physical or virtual card by changing its status to 'active'.
         
-        Tags: Apollo Card API
+        Args:
+            isVirtual: Boolean flag indicating whether to unblock the virtual card (True) or physical card (False) associated with this account
         
+        Returns:
+            Deserialized JSON response containing updated card status information
+        
+        Raises:
+            requests.HTTPError: Raised if the PATCH request fails, typically due to invalid card_id or authorization issues
+        
+        Tags:
+            unblock, card-management, api-integration, important
         """
-        
         request_body = {
             "isVirtual": isVirtual,
         }
@@ -256,22 +279,21 @@ Body:
 
     def cancel(self, description: Annotated[Any, ''] = None, reason: Annotated[Any, ''] = None) -> Any:
         """
-        Cancel. Objetivo: Cancelar um cartão físico.  
-
-Status do cartão é alterado para "canceled".      
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")  
-
-
-Body param:
-- description: Campo livre com descrição sobre motivo do cancelamento.   
-- reason: Enviar "P" para Perda ou "R" para Roubo.   
+        Cancel a physical card by updating its status to 'canceled' via API.
         
-        Tags: Apollo Card API
+        Args:
+            description: Free-text field describing cancellation reason.
+            reason: Cancellation reason code: 'P' for Loss, 'R' for Theft.
         
+        Returns:
+            Parsed JSON response containing cancellation confirmation.
+        
+        Raises:
+            requests.HTTPError: Raised for failed API requests (non-2xx status codes).
+        
+        Tags:
+            cancel, card, async-job, api, important
         """
-        
         request_body = {
             "description": description,
             "reason": reason,
@@ -286,22 +308,18 @@ Body param:
 
     def virtual_card_create(self, ) -> dict[str, Any]:
         """
-        Virtual Card - Create. Objetivo: Recuperar cartão digital a partir de um físico.   
-
-Para criar um cartão virtual é necessário primeiramente realizar a solicitação de um cartão (*Card Request*).  
-
-Após aprovada a solicitação, o cartão físico fica com status "created" e então é possível solicitar o cartão virtual.  
-
-Uma vez criado, este metodo não cria um novo cartão virtual mas somente retonas os dados do cartão existente com o código de segurança atualizado, sendo este atualizado a cada nova transação do cartão.      
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
-
+        Creates or retrieves a virtual card linked to a physical card that was previously requested and approved, updating the security code with each transaction.
         
-        Tags: Apollo Card API
+        Returns:
+            Dictionary containing the virtual card details including updated security code from the API response
         
+        Raises:
+            HTTPError: Raised for unsuccessful API responses (non-2xx status codes)
+            RequestException: Raised for network connectivity issues or request failures
+        
+        Tags:
+            virtual-card, card-api, security-update, financial-services, important
         """
-        
         path = ""
         url = f"{self.base_url}{path}"
         query_params = {}
@@ -311,18 +329,20 @@ Route param:
 
     def virtual_card_security_code(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
         """
-        Virtual Card - Security Code. Objetivo: Retornar o código de segurança atual do cartão virtual (CVC).   
-
-Este método deve ser utilizado toda vez que se deseja exibir o código do cartão virtual ao cliente, pois este código é dinâmico, podendo ser alterado a cada nova transação.   
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
-
+        Fetches the current security code (CVC) of a virtual card.
         
-        Tags: Apollo Card API
+        Args:
+            request_body: Optional request body; if provided, it should be annotated with any data type (default: None).
         
+        Returns:
+            A dictionary containing the security code details of the virtual card.
+        
+        Raises:
+            HTTPError: Raised if the HTTP request to fetch the security code fails, typically due to network issues or invalid responses.
+        
+        Tags:
+            fetch, security-code, virtual-card, management, important
         """
-        
         request_body = request_body
         path = ""
         url = f"{self.base_url}{path}"
@@ -335,20 +355,21 @@ Route param:
 
     def card_password_create(self, password: Annotated[Any, ''] = None, passwordConfirm: Annotated[Any, ''] = None) -> Any:
         """
-        Card Password Create. Objetivo: Ativar cartão físico.    
-
-Deve ser chamada quando usuário receber o cartão físico. Só é permitido chamar este método após 24 horas do embossamento.  
-
-Status do cartão é alterado para "active".   
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
-
+        Creates a password for a physical card to activate it.
         
-        Tags: Apollo Card API
+        Args:
+            password: The password to set for the card; can be of any type.
+            passwordConfirm: Confirmation of the password set; must match the password.
         
+        Returns:
+            JSON response from the server after creating the password.
+        
+        Raises:
+            requests.RequestException: Raised if there is an issue with the HTTP request.
+        
+        Tags:
+            create, activate, card-management, important
         """
-        
         request_body = {
             "password": password,
             "passwordConfirm": passwordConfirm,
@@ -363,20 +384,22 @@ Route param:
 
     def card_password_change(self, password: Annotated[Any, ''] = None, passwordConfirm: Annotated[Any, ''] = None, passwordOld: Annotated[Any, ''] = None) -> Any:
         """
-        Card Password Change. Objetivo: Ativar cartão físico.    
-
-Deve ser chamada quando usuário receber o cartão físico. Só é permitido chamar este método após 24 horas do embossamento.  
-
-Status do cartão é alterado para "active".   
-
-Route param:
-- card_id: Código do cartão físico ("cards.id")
-
+        Activates a physical card by updating its password and changing its status to 'active'.
         
-        Tags: Apollo Card API
+        Args:
+            password: New password for card activation (must match passwordConfirm)
+            passwordConfirm: Confirmation of new password
+            passwordOld: Current/previous password of the card
         
+        Returns:
+            Parsed JSON response containing updated card status from API
+        
+        Raises:
+            requests.HTTPError: Raised for 4XX/5XX responses from API endpoints
+        
+        Tags:
+            card-activation, password-update, api-operation, physical-card, status-change, important
         """
-        
         request_body = {
             "password": password,
             "passwordConfirm": passwordConfirm,
@@ -392,18 +415,34 @@ Route param:
 
     def webhook_autorize(self, acquirer_code: Annotated[Any, ''] = None, additional_data: Annotated[Any, ''] = None, authorization_code_reason: Annotated[Any, ''] = None, capture: Annotated[dict[str, Any], ''] = None, card_acceptor: Annotated[dict[str, Any], ''] = None, card_id: Annotated[Any, ''] = None, cardholder_billing: Annotated[dict[str, Any], ''] = None, mti: Annotated[Any, ''] = None, pan: Annotated[Any, ''] = None, pinblock: Annotated[Any, ''] = None, pos_data: Annotated[Any, ''] = None, processing_code: Annotated[Any, ''] = None, settlement_date: Annotated[Any, ''] = None, settlement_value: Annotated[dict[str, Any], ''] = None, stan: Annotated[Any, ''] = None) -> Any:
         """
-        Webhook Autorize. Objetivo: Autorizar um débito enviado pelo uso do cartão pré-pago.   
-
-Método disparado pela empresa processadora do cartão (Orbitall), no momento em que cliente utiliza o cartão.   
-
-A autorização será enviada para API do Core, que deve devolver se o cliente tem saldo suficiente para o débito. Além de ser responsável por atualizar o saldo e extrato do cliente.
-
-
+        Runs a webhook to authorize a debit transaction using a prepaid card, triggered by the card's processing company (Orbitall), which updates the customer's balance and statement.
         
-        Tags: Apollo Authorize API
+        Args:
+            acquirer_code: Acquirer code associated with the transaction.
+            additional_data: Any additional data provided for the transaction.
+            authorization_code_reason: The reason for the authorization code.
+            capture: Information related to capturing the transaction.
+            card_acceptor: Details about the card acceptor.
+            card_id: The ID of the card used.
+            cardholder_billing: Billing information for the cardholder.
+            mti: Merchant type indicator.
+            pan: Primary account number of the card.
+            pinblock: PIN block if applicable.
+            pos_data: Point of sale data.
+            processing_code: Code for transaction processing.
+            settlement_date: Date for settlement.
+            settlement_value: Value associated with the settlement.
+            stan: System trace audit number.
         
+        Returns:
+            JSON response from the transaction authorization API.
+        
+        Raises:
+            requests.RequestException: Raised if there is a network problem or the API endpoint returns an unsuccessful status code.
+        
+        Tags:
+            authorize, debit, webhook, prepaid-card, important, api-call, balance-update
         """
-        
         request_body = {
             "acquirer_code": acquirer_code,
             "additional_data": additional_data,
@@ -431,21 +470,20 @@ A autorização será enviada para API do Core, que deve devolver se o cliente t
 
     def webhook_card_created1(self, request_body: Annotated[Any, ''] = None) -> Any:
         """
-        Webhook Card Created. Objetivo: Confirmar a solicitação de criação de um cartão pré-pago.   
-
-Este método deve ser desenvolvido na API do Core para receber a confirmação de que o cartão solicitado foi criado, retornando os dados cartão físico.   
-
-Basicamente os dados retornados são:
-- "accountId": Código da conta do usuário.
-- "card": Dados do cartão físico criado.
-- "card"."virtualCard": Dados do cartão virtual criado.
-
-Neste momento o cartão físico fica com status "Created" 
+        Handles the creation of a prepaid card by confirming the request and returning physical card details.
         
-        Tags: Core API
+        Args:
+            request_body: Optional request body data (defaults to None)
         
+        Returns:
+            A JSON response containing the account ID and details of the physical and virtual cards created.
+        
+        Raises:
+            requests.HTTPError: Raised if the HTTP request returns an unsuccessful status code.
+        
+        Tags:
+            card-creation, core-api, important
         """
-        
         request_body = request_body
         path = ""
         url = f"{self.base_url}{path}"
@@ -458,33 +496,27 @@ Neste momento o cartão físico fica com status "Created"
 
     def webhook_authorize(self, account_id: Annotated[Any, ''] = None, amount: Annotated[float, ''] = None, card_acceptor: Annotated[dict[str, Any], ''] = None, currency: Annotated[Any, ''] = None, date: Annotated[Any, ''] = None, last_4_digits: Annotated[Any, ''] = None, stan: Annotated[Any, ''] = None, status: Annotated[Any, ''] = None) -> Any:
         """
-        Webhook Authorize. Objetivo: Processar transações dos cartões pré-pago.   
-
-Este método deve ser desenvolvido na API do Core para gerenciar as transações dos cartões pré-pago, que são disparadas pela bandeira quando um cliente utilizar o cartão.  
-
-Resumidamente a bandeira faz uma chamada à API da empresa emissora do cartão (Orbitall), que faz validações iniciais sobre a transação, e posteriomente chama a API Apollo Authorize para verificar se o cliente tem saldo.   
-
-A Apollo Authorize identifica o cartão e chama a API Core (exmeplo, Lírio API) do parceiro correspondente. Este metodo pode ser chamada em duas situações diferentes:
-
-1. Autorizar Transação ("Status":"approved") 
-> A API do Core deve verificar se o cliente tem saldo, e retornar se a transação de débito foi autorizada. Caso o débito seja aprovado, o saldo e extrato do cliente devem ser atualizados. Para compras internacionais o IOF deve ser calculado e considerado no total da transação.
-
-2. Desfazer Transação ("Status": "resufed")
-> A API do Core deve desfazer determinada transação, creditando o valor da transação no saldo do cliente, além de atualizar extrato.
-
-
-*Transações Internacionais*
-
-Compras internacionais retornam informações a mais como:
-* CaptureAmount: Valor na moeda real da compra
-* CaptureCurrency: Sigla da moeda real da compra
-* SettlementeAcount: Valor na moeda utilizada como base para conversão
-* SettlementeCurrency: Sigla da moeda utilizada como base para conversão
+        Processes prepaid card transactions by verifying client balance and handling transaction approval or reversal.
         
-        Tags: Core API
+        Args:
+            account_id: ID of the client's account (optional)
+            amount: Transaction amount (optional)
+            card_acceptor: Details of the card acceptor (optional)
+            currency: Currency of the transaction (optional)
+            date: Date of the transaction (optional)
+            last_4_digits: Last four digits of the card (optional)
+            stan: Stan number for the transaction (optional)
+            status: Status of the transaction (e.g., approved, reversed) (optional)
         
+        Returns:
+            JSON response from the API request
+        
+        Raises:
+            requests.exceptions.HTTPError: Raised if there is a problem with the HTTP request
+        
+        Tags:
+            authorize, transaction, prepaid-card, core-api, important
         """
-        
         request_body = {
             "account_id": account_id,
             "amount": amount,
@@ -505,14 +537,27 @@ Compras internacionais retornam informações a mais como:
 
     def webhook_authorize_information(self, account_id: Annotated[Any, ''] = None, amount: Annotated[float, ''] = None, card_acceptor: Annotated[dict[str, Any], ''] = None, currency: Annotated[Any, ''] = None, date: Annotated[Any, ''] = None, international: Annotated[dict[str, Any], ''] = None, last_4_digits: Annotated[Any, ''] = None, stan: Annotated[Any, ''] = None) -> Any:
         """
-        Webhook Authorize Information. Objetivo: Informar tentativa de transação não realiza com sucesso.   
-
-Este método deve ser desenvolvido na API do Core para receber as transações dos cartões pré-pago, que não foram concretizadas. Por algum motivo a transação já foi barrada antes de chegar na verificação de saldo do cliente.
+        Handles and reports failed transactions directly to the Core API.
         
-        Tags: Core API
+        Args:
+            account_id: The ID of the account associated with the transaction.
+            amount: The amount of the failed transaction.
+            card_acceptor: Details about the card acceptor.
+            currency: The currency used in the transaction.
+            date: The date of the failed transaction.
+            international: International transaction details.
+            last_4_digits: The last four digits of the card number.
+            stan: The System Trace Audit Number (STAN) of the transaction.
         
+        Returns:
+            A JSON response from the Core API after reporting the transaction.
+        
+        Raises:
+            HTTPError: Raised if the POST request to the Core API fails.
+        
+        Tags:
+            core-api, transaction-reporting, important
         """
-        
         request_body = {
             "account_id": account_id,
             "amount": amount,
@@ -533,14 +578,21 @@ Este método deve ser desenvolvido na API do Core para receber as transações d
 
     def webhook_international_transactions(self, Date: Annotated[Any, 'Data da transação'] = None, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
         """
-        Webhook International Transactions. Objetivo: Retornar informações de transações internacionais para gerar relatório de transações com IOF.
-
-Além das informações que o Authorize envia para o Core no momento de autorizar a transação, o campo "Tax" deve ser retornado contendo o valor do IOF calculado para a transação.
+        Retrieves international transaction information to generate a transaction report with IOF.
         
-        Tags: Core API
+        Args:
+            Date: The date of the transaction. Default is None.
+            request_body: Request body for additional data. Default is None.
         
+        Returns:
+            A dictionary containing transaction details, including calculated IOF for each transaction.
+        
+        Raises:
+            HTTPError: Raised if the HTTP request returns an unsuccessful status code.
+        
+        Tags:
+            report, transaction, iof, international, important, core-api
         """
-        
         request_body = request_body
         path = ""
         url = f"{self.base_url}{path}"
