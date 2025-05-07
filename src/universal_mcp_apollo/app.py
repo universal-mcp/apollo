@@ -68,7 +68,7 @@ class ApolloApp(APIApplication):
             dict[str, Any]: Create - Status 200
 
         Tags:
-            Apollo Authorize API
+            Apollo Authorize API, important
         """
         request_body = {
             'accountId': accountId,
@@ -184,7 +184,7 @@ class ApolloApp(APIApplication):
             dict[str, Any]: Get - Status 200
 
         Tags:
-            Apollo Card API
+            Apollo Card API, important
         """
         if card_id is None:
             raise ValueError("Missing required parameter 'card_id'")
@@ -212,7 +212,7 @@ class ApolloApp(APIApplication):
             Any: Block - Status 204
 
         Tags:
-            Apollo Card API
+            Apollo Card API, important
         """
         if card_id is None:
             raise ValueError("Missing required parameter 'card_id'")
