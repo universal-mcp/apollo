@@ -4,7 +4,7 @@ from universal_mcp.integrations import Integration
 
 class ApolloApp(APIApplication):
     def __init__(self, integration: Integration = None, **kwargs) -> None:
-        super().__init__(name='apolloapp', integration=integration, **kwargs)
+        super().__init__(name='apollo', integration=integration, **kwargs)
         self.base_url = "{{card_base_url}}"
 
     def get_cards(self, page=None, limit=None, id=None, accountId=None, cardId=None, document=None, status=None, startCreateDate=None, endCreateDate=None, startCancelDate=None, endCancelDate=None, startEmbossDate=None, endEmbossDate=None) -> dict[str, Any]:
