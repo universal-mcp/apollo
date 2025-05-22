@@ -115,10 +115,9 @@ class ApolloApp(APIApplication):
 
         Args:
             reveal_personal_emails (boolean): Indicates whether to include personal emails in the bulk match results for people, defaulting to false if not specified.
-            reveal_phone_number (boolean): If set to true, includes the phone number in the bulk match response; defaults to false.
-            webhook_url (string): Specifies the URL to which webhook notifications are sent when the bulk match operation completes.
-            details (array): Provide info for each person you want to enrich as an object within this array. Add up to 10 people.
-
+            details (array): Provide info for each person you want to enrich as an object within this array. Add up to 10 people. Example: [{'first_name': 'Tim', 'last_name': 'Zheng', 'email': 'tim@apollo.io'}]
+            reveal_phone_number (boolean): Set true to enrich with all phone numbers. Defaults to false. Requires webhook_url. Do not use if you do not have webhook url.
+            webhook_url (string): Required if reveal_phone_number is true. Where Apollo sends phone number JSON response.
         Returns:
             dict[str, Any]: 200
 
