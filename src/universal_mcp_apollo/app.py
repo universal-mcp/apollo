@@ -131,7 +131,7 @@ class ApolloApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            Organizations    
+            Organizations, important    
         """
         url = f"{self.base_url}/organizations/enrich"
         query_params = {k: v for k, v in [('domain', domain)] if v is not None}
@@ -199,7 +199,7 @@ class ApolloApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            People    
+            People, important    
         """
         request_body_data = None
         url = f"{self.base_url}/mixed_people/search"
@@ -238,7 +238,7 @@ class ApolloApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            Organizations    
+            Organizations, important    
         """
         request_body_data = None
         url = f"{self.base_url}/mixed_companies/search"
@@ -503,7 +503,7 @@ class ApolloApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            Contacts    
+            Contacts, important    
         """
         request_body_data = None
         url = f"{self.base_url}/contacts"
@@ -583,7 +583,7 @@ class ApolloApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            Contacts    
+            Contacts, important        
         """
         request_body_data = None
         url = f"{self.base_url}/contacts/search"
