@@ -22,7 +22,7 @@ class ApolloApp(APIApplication):
         credentials = self.integration.get_credentials()
         
         # The key in the credentials dict from ApiKeyIntegration is 'api_key'
-        api_key = credentials.get("api_key") 
+        api_key = credentials.get("api_key") or credentials.get("API_KEY") or credentials.get("apiKey")
         
         if not api_key:
             logger.error("ApolloApp: API key not found in integration credentials for Apollo.")
