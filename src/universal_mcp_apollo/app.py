@@ -40,23 +40,37 @@ class ApolloApp(APIApplication):
             "Cache-Control": "no-cache" # Often good practice for APIs
         }
 
-    def people_enrichment(self, first_name: Optional[str] = None, last_name: Optional[str] = None, name: Optional[str] = None, email: Optional[str] = None, hashed_email: Optional[str] = None, organization_name: Optional[str] = None, domain: Optional[str] = None, id: Optional[str] = None, linkedin_url: Optional[str] = None, reveal_personal_emails: Optional[bool] = None, reveal_phone_number: Optional[bool] = None, webhook_url: Optional[str] = None) -> dict[str, Any]:
+    def people_enrichment(
+        self,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        name: Optional[str] = None,
+        email: Optional[str] = None,
+        hashed_email: Optional[str] = None,
+        organization_name: Optional[str] = None,
+        domain: Optional[str] = None,
+        id: Optional[str] = None,
+        linkedin_url: Optional[str] = None,
+        reveal_personal_emails: Optional[bool] = None,
+        reveal_phone_number: Optional[bool] = None,
+        webhook_url: Optional[str] = None
+    ) -> dict[str, Any]:
         """
         Matches a person's profile based on provided identifiers such as name, email, organization, or LinkedIn URL, with options to reveal personal emails and phone numbers.
 
         Args:
-            first_name (string): The first_name query parameter specifies the first name used to match people in the POST /people/match operation.
-            last_name (string): The last_name parameter, provided in the query string of the POST request, specifies the person's last name to match against records in the system.
-            name (string): Name of the person to match, provided as a query parameter in the POST request.
-            email (string): The email address used as a query parameter to identify or match a person in the POST /people/match request.
-            hashed_email (string): Hashed email address used as a query parameter to identify or match a person in the POST /people/match operation.
-            organization_name (string): The name of the organization to match people against, provided as a query string parameter.
-            domain (string): The domain to match people against, provided as a query string parameter.
-            id (string): The unique identifier for the person to be matched, provided as a query string parameter.
-            linkedin_url (string): The LinkedIn profile URL of the person to be matched.
-            reveal_personal_emails (boolean): Optional boolean query parameter indicating whether to include personal emails in the response, defaulting to false.
-            reveal_phone_number (boolean): Boolean query parameter to indicate whether to include the person's phone number in the response, defaulting to false.
-            webhook_url (string): Specifies the HTTPS endpoint URL to which webhook event notifications will be sent when a matching operation is completed.
+            first_name (string): The first name of the person. Typically used with last_name. Example: tim
+            last_name (string): The last name of the person. Typically used with first_name. Example: zheng
+            name (string): The full name (first and last) of the person. Use instead of first_name/last_name. Example: tim zheng
+            email (string): The email address of the person. Example: example@email.com
+            hashed_email (string): The hashed email (MD5 or SHA-256) of the person. Example: 8d935115b9ff4489f2d1f9249503cadf
+            organization_name (string): The name of the person's employer (current or previous). Example: apollo
+            domain (string): The employer's domain (current or previous). No www/@. Example: apollo.io
+            id (string): The Apollo ID for the person. Find via People Search. Example: 587cf802f65125cad923a266
+            linkedin_url (string): The LinkedIn profile URL of the person. Example: http://www.linkedin.com/in/tim-zheng-677ba010
+            reveal_personal_emails (boolean): Set true to enrich with personal emails. Defaults to false. May consume credits.
+            reveal_phone_number (boolean): Set true to enrich with all phone numbers. Defaults to false. Requires webhook_url. Do not use if you do not have webhook url.
+            webhook_url (string): Required if reveal_phone_number is true. Where Apollo sends phone number JSON response.
 
         Returns:
             dict[str, Any]: 200
@@ -70,7 +84,22 @@ class ApolloApp(APIApplication):
         """
         request_body_data = None
         url = f"{self.base_url}/people/match"
-        query_params = {k: v for k, v in [('first_name', first_name), ('last_name', last_name), ('name', name), ('email', email), ('hashed_email', hashed_email), ('organization_name', organization_name), ('domain', domain), ('id', id), ('linkedin_url', linkedin_url), ('reveal_personal_emails', reveal_personal_emails), ('reveal_phone_number', reveal_phone_number), ('webhook_url', webhook_url)] if v is not None}
+        query_params = {
+            k: v for k, v in [
+                ('first_name', first_name),
+                ('last_name', last_name),
+                ('name', name),
+                ('email', email),
+                ('hashed_email', hashed_email),
+                ('organization_name', organization_name),
+                ('domain', domain),
+                ('id', id),
+                ('linkedin_url', linkedin_url),
+                ('reveal_personal_emails', reveal_personal_emails),
+                ('reveal_phone_number', reveal_phone_number),
+                ('webhook_url', webhook_url)
+            ] if v is not None
+        }
         response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
         response.raise_for_status()
         if response.status_code == 204 or not response.content or not response.text.strip():
