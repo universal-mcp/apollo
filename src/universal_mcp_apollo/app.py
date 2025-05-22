@@ -52,8 +52,6 @@ class ApolloApp(APIApplication):
         id: Optional[str] = None,
         linkedin_url: Optional[str] = None,
         reveal_personal_emails: Optional[bool] = None,
-        reveal_phone_number: Optional[bool] = None,
-        webhook_url: Optional[str] = None
     ) -> dict[str, Any]:
         """
         Matches a person's profile based on provided identifiers such as name, email, organization, or LinkedIn URL, with options to reveal personal emails and phone numbers.
@@ -69,8 +67,6 @@ class ApolloApp(APIApplication):
             id (string): The Apollo ID for the person. Find via People Search. Example: 587cf802f65125cad923a266
             linkedin_url (string): The LinkedIn profile URL of the person. Example: http://www.linkedin.com/in/tim-zheng-677ba010
             reveal_personal_emails (boolean): Set true to enrich with personal emails. Defaults to false. May consume credits.
-            reveal_phone_number (boolean): Set true to enrich with all phone numbers. Defaults to false. Requires webhook_url. Do not use if you do not have webhook url.
-            webhook_url (string): Required if reveal_phone_number is true. Where Apollo sends phone number JSON response.
 
         Returns:
             dict[str, Any]: 200
@@ -95,9 +91,7 @@ class ApolloApp(APIApplication):
                 ('domain', domain),
                 ('id', id),
                 ('linkedin_url', linkedin_url),
-                ('reveal_personal_emails', reveal_personal_emails),
-                ('reveal_phone_number', reveal_phone_number),
-                ('webhook_url', webhook_url)
+                ('reveal_personal_emails', reveal_personal_emails)
             ] if v is not None
         }
         response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
@@ -109,15 +103,13 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def bulk_people_enrichment(self, reveal_personal_emails: Optional[bool] = None, reveal_phone_number: Optional[bool] = None, webhook_url: Optional[str] = None, details: Optional[list[dict[str, Any]]] = None) -> dict[str, Any]:
+    def bulk_people_enrichment(self, reveal_personal_emails: Optional[bool] = None, details: Optional[list[dict[str, Any]]] = None) -> dict[str, Any]:
         """
         Performs a bulk matching operation for people records using posted data, with options to reveal personal emails or phone numbers and specify a webhook URL for result delivery.
 
         Args:
             reveal_personal_emails (boolean): Indicates whether to include personal emails in the bulk match results for people, defaulting to false if not specified.
             details (array): Provide info for each person you want to enrich as an object within this array. Add up to 10 people. Example: [{'first_name': 'Tim', 'last_name': 'Zheng', 'email': 'tim@apollo.io'}]
-            reveal_phone_number (boolean): Set true to enrich with all phone numbers. Defaults to false. Requires webhook_url. Do not use if you do not have webhook url.
-            webhook_url (string): Required if reveal_phone_number is true. Where Apollo sends phone number JSON response.
         Returns:
             dict[str, Any]: 200
 
@@ -134,7 +126,7 @@ class ApolloApp(APIApplication):
         }
         request_body_data = {k: v for k, v in request_body_data.items() if v is not None}
         url = f"{self.base_url}/people/bulk_match"
-        query_params = {k: v for k, v in [('reveal_personal_emails', reveal_personal_emails), ('reveal_phone_number', reveal_phone_number), ('webhook_url', webhook_url)] if v is not None}
+        query_params = {k: v for k, v in [('reveal_personal_emails', reveal_personal_emails)] if v is not None}
         response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
         response.raise_for_status()
         if response.status_code == 204 or not response.content or not response.text.strip():
