@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from universal_mcp.applications import APIApplication
 from universal_mcp.integrations import Integration
 from loguru import logger
@@ -40,9 +40,9 @@ class ApolloApp(APIApplication):
             "Cache-Control": "no-cache" # Often good practice for APIs
         }
 
-    def people_enrichment(self, first_name=None, last_name=None, name=None, email=None, hashed_email=None, organization_name=None, domain=None, id=None, linkedin_url=None, reveal_personal_emails=None, reveal_phone_number=None, webhook_url=None) -> dict[str, Any]:
+    def people_enrichment(self, first_name: Optional[str] = None, last_name: Optional[str] = None, name: Optional[str] = None, email: Optional[str] = None, hashed_email: Optional[str] = None, organization_name: Optional[str] = None, domain: Optional[str] = None, id: Optional[str] = None, linkedin_url: Optional[str] = None, reveal_personal_emails: Optional[bool] = None, reveal_phone_number: Optional[bool] = None, webhook_url: Optional[str] = None) -> dict[str, Any]:
         """
-        Matches a person’s profile based on provided identifiers such as name, email, organization, or LinkedIn URL, with options to reveal personal emails and phone numbers.
+        Matches a person's profile based on provided identifiers such as name, email, organization, or LinkedIn URL, with options to reveal personal emails and phone numbers.
 
         Args:
             first_name (string): The first_name query parameter specifies the first name used to match people in the POST /people/match operation.
@@ -80,7 +80,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def bulk_people_enrichment(self, reveal_personal_emails=None, reveal_phone_number=None, webhook_url=None, details=None) -> dict[str, Any]:
+    def bulk_people_enrichment(self, reveal_personal_emails: Optional[bool] = None, reveal_phone_number: Optional[bool] = None, webhook_url: Optional[str] = None, details: Optional[list[dict[str, Any]]] = None) -> dict[str, Any]:
         """
         Performs a bulk matching operation for people records using posted data, with options to reveal personal emails or phone numbers and specify a webhook URL for result delivery.
 
@@ -116,7 +116,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def organization_enrichment(self, domain) -> dict[str, Any]:
+    def organization_enrichment(self, domain: str) -> dict[str, Any]:
         """
         Retrieves enriched organizational data such as industry, revenue, employee count, funding details, and contact information based on a provided domain.
 
@@ -144,7 +144,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def bulk_organization_enrichment(self, domains_) -> dict[str, Any]:
+    def bulk_organization_enrichment(self, domains_: list[str]) -> dict[str, Any]:
         """
         Enriches multiple organization profiles by accepting a list of domains and returns detailed data for each, allowing for efficient bulk processing.
 
@@ -173,7 +173,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def people_search(self, person_titles_=None, include_similar_titles=None, person_locations_=None, person_seniorities_=None, organization_locations_=None, q_organization_domains_list_=None, contact_email_status_=None, organization_ids_=None, organization_num_employees_ranges_=None, q_keywords=None, page=None, per_page=None) -> dict[str, Any]:
+    def people_search(self, person_titles_: Optional[list[str]] = None, include_similar_titles: Optional[bool] = None, person_locations_: Optional[list[str]] = None, person_seniorities_: Optional[list[str]] = None, organization_locations_: Optional[list[str]] = None, q_organization_domains_list_: Optional[list[str]] = None, contact_email_status_: Optional[list[str]] = None, organization_ids_: Optional[list[str]] = None, organization_num_employees_ranges_: Optional[list[str]] = None, q_keywords: Optional[str] = None, page: Optional[int] = None, per_page: Optional[int] = None) -> dict[str, Any]:
         """
         Searches for people by specified criteria such as titles, locations, seniorities, organization details, and additional filters, returning paginated results via a POST request.
 
@@ -213,7 +213,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def organization_search(self, organization_num_employees_ranges_=None, organization_locations_=None, organization_not_locations_=None, revenue_range_min=None, revenue_range_max=None, currently_using_any_of_technology_uids_=None, q_organization_keyword_tags_=None, q_organization_name=None, organization_ids_=None, page=None, per_page=None) -> dict[str, Any]:
+    def organization_search(self, organization_num_employees_ranges_: Optional[list[str]] = None, organization_locations_: Optional[list[str]] = None, organization_not_locations_: Optional[list[str]] = None, revenue_range_min: Optional[int] = None, revenue_range_max: Optional[int] = None, currently_using_any_of_technology_uids_: Optional[list[str]] = None, q_organization_keyword_tags_: Optional[list[str]] = None, q_organization_name: Optional[str] = None, organization_ids_: Optional[list[str]] = None, page: Optional[int] = None, per_page: Optional[int] = None) -> dict[str, Any]:
         """
         Searches for mixed companies based on various filters such as employee ranges, locations, revenue, technologies used, keywords, and pagination parameters.
 
@@ -252,7 +252,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def organization_jobs_postings(self, organization_id, page=None, per_page=None) -> dict[str, Any]:
+    def organization_jobs_postings(self, organization_id: str, page: Optional[int] = None, per_page: Optional[int] = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of job postings for the specified organization by organization_id.
 
@@ -284,7 +284,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def create_an_account(self, name=None, domain=None, owner_id=None, account_stage_id=None, phone=None, raw_address=None) -> dict[str, Any]:
+    def create_an_account(self, name: Optional[str] = None, domain: Optional[str] = None, owner_id: Optional[str] = None, account_stage_id: Optional[str] = None, phone: Optional[str] = None, raw_address: Optional[str] = None) -> dict[str, Any]:
         """
         Creates a new account resource using provided query parameters such as name, domain, owner ID, account stage ID, phone, and raw address.
 
@@ -318,7 +318,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_an_account(self, account_id, name=None, domain=None, owner_id=None, account_stage_id=None, raw_address=None, phone=None) -> dict[str, Any]:
+    def update_an_account(self, account_id: str, name: Optional[str] = None, domain: Optional[str] = None, owner_id: Optional[str] = None, account_stage_id: Optional[str] = None, raw_address: Optional[str] = None, phone: Optional[str] = None) -> dict[str, Any]:
         """
         Updates the account identified by {account_id} with new provided values or replaces its details if required, supporting various account attributes as query parameters[1][2][5].
 
@@ -355,7 +355,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def search_for_accounts(self, q_organization_name=None, account_stage_ids_=None, sort_by_field=None, sort_ascending=None, page=None, per_page=None) -> dict[str, Any]:
+    def search_for_accounts(self, q_organization_name: Optional[str] = None, account_stage_ids_: Optional[list[str]] = None, sort_by_field: Optional[str] = None, sort_ascending: Optional[bool] = None, page: Optional[int] = None, per_page: Optional[int] = None) -> dict[str, Any]:
         """
         Searches for accounts using the specified organization name, account stages, and sorting preferences, returning a paginated list of results.
 
@@ -389,7 +389,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_account_stage(self, account_ids_, account_stage_id) -> dict[str, Any]:
+    def update_account_stage(self, account_ids_: list[str], account_stage_id: str) -> dict[str, Any]:
         """
         Updates multiple accounts in bulk using the provided account IDs and stage ID.
 
@@ -419,7 +419,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_account_ownership(self, account_ids_, owner_id) -> dict[str, Any]:
+    def update_account_ownership(self, account_ids_: list[str], owner_id: str) -> dict[str, Any]:
         """
         Updates the owners of multiple accounts by specifying the account IDs and the new owner ID via a POST request.
 
@@ -474,7 +474,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def create_a_contact(self, first_name=None, last_name=None, organization_name=None, title=None, account_id=None, email=None, website_url=None, label_names_=None, contact_stage_id=None, present_raw_address=None, direct_phone=None, corporate_phone=None, mobile_phone=None, home_phone=None, other_phone=None) -> dict[str, Any]:
+    def create_a_contact(self, first_name: Optional[str] = None, last_name: Optional[str] = None, organization_name: Optional[str] = None, title: Optional[str] = None, account_id: Optional[str] = None, email: Optional[str] = None, website_url: Optional[str] = None, label_names_: Optional[list[str]] = None, contact_stage_id: Optional[str] = None, present_raw_address: Optional[str] = None, direct_phone: Optional[str] = None, corporate_phone: Optional[str] = None, mobile_phone: Optional[str] = None, home_phone: Optional[str] = None, other_phone: Optional[str] = None) -> dict[str, Any]:
         """
         Creates a new contact record with provided details such as name, organization, title, email, account ID, phone numbers, address, and labels, returning a success or error response.
 
@@ -517,7 +517,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_a_contact(self, contact_id, first_name=None, last_name=None, organization_name=None, title=None, account_id=None, email=None, website_url=None, label_names_=None, contact_stage_id=None, present_raw_address=None, direct_phone=None, corporate_phone=None, mobile_phone=None, home_phone=None, other_phone=None) -> dict[str, Any]:
+    def update_a_contact(self, contact_id: str, first_name: Optional[str] = None, last_name: Optional[str] = None, organization_name: Optional[str] = None, title: Optional[str] = None, account_id: Optional[str] = None, email: Optional[str] = None, website_url: Optional[str] = None, label_names_: Optional[list[str]] = None, contact_stage_id: Optional[str] = None, present_raw_address: Optional[str] = None, direct_phone: Optional[str] = None, corporate_phone: Optional[str] = None, mobile_phone: Optional[str] = None, home_phone: Optional[str] = None, other_phone: Optional[str] = None) -> dict[str, Any]:
         """
         Updates an existing contact identified by contact_id with provided details such as name, organization, email, phone numbers, and labels.
 
@@ -563,7 +563,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def search_for_contacts(self, q_keywords=None, contact_stage_ids_=None, sort_by_field=None, sort_ascending=None, per_page=None, page=None) -> dict[str, Any]:
+    def search_for_contacts(self, q_keywords: Optional[str] = None, contact_stage_ids_: Optional[list[str]] = None, sort_by_field: Optional[str] = None, sort_ascending: Optional[bool] = None, per_page: Optional[int] = None, page: Optional[int] = None) -> dict[str, Any]:
         """
         Searches contacts based on keywords, contact stage IDs, and other query parameters, returning a paginated and sortable list of matching contacts.
 
@@ -597,7 +597,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_contact_stage(self, contact_ids_, contact_stage_id) -> dict[str, Any]:
+    def update_contact_stage(self, contact_ids_: list[str], contact_stage_id: str) -> dict[str, Any]:
         """
         Updates the stages of specified contacts using their IDs and a target stage ID.
 
@@ -627,7 +627,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_contact_ownership(self, contact_ids_, owner_id) -> dict[str, Any]:
+    def update_contact_ownership(self, contact_ids_: list[str], owner_id: str) -> dict[str, Any]:
         """
         Updates the owners of multiple contacts by assigning a specified owner ID to the given list of contact IDs.
 
@@ -682,7 +682,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def create_deal(self, name, owner_id=None, account_id=None, amount=None, opportunity_stage_id=None, closed_date=None) -> dict[str, Any]:
+    def create_deal(self, name: str, owner_id: Optional[str] = None, account_id: Optional[str] = None, amount: Optional[str] = None, opportunity_stage_id: Optional[str] = None, closed_date: Optional[str] = None) -> dict[str, Any]:
         """
         Creates a new opportunity with the specified parameters such as name, owner ID, account ID, amount, opportunity stage ID, and closed date.
 
@@ -716,7 +716,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def list_all_deals(self, sort_by_field=None, page=None, per_page=None) -> dict[str, Any]:
+    def list_all_deals(self, sort_by_field: Optional[str] = None, page: Optional[int] = None, per_page: Optional[int] = None) -> dict[str, Any]:
         """
         Searches for opportunities with optional sorting and pagination parameters and returns the matching results.
 
@@ -746,7 +746,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_deal(self, opportunity_id, owner_id=None, name=None, amount=None, opportunity_stage_id=None, closed_date=None, is_closed=None, is_won=None, source=None, account_id=None) -> dict[str, Any]:
+    def update_deal(self, opportunity_id: str, owner_id: Optional[str] = None, name: Optional[str] = None, amount: Optional[str] = None, opportunity_stage_id: Optional[str] = None, closed_date: Optional[str] = None, is_closed: Optional[bool] = None, is_won: Optional[bool] = None, source: Optional[str] = None, account_id: Optional[str] = None) -> dict[str, Any]:
         """
         Updates an opportunity with the specified `opportunity_id` by applying partial modifications using query parameters to change attributes such as owner, name, amount, stage, and status.
 
@@ -811,7 +811,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def add_contacts_to_sequence(self, sequence_id, emailer_campaign_id, contact_ids_, send_email_from_email_account_id, sequence_no_email=None, sequence_unverified_email=None, sequence_job_change=None, sequence_active_in_other_campaigns=None, sequence_finished_in_other_campaigns=None, user_id=None) -> dict[str, Any]:
+    def add_contacts_to_sequence(self, sequence_id: str, emailer_campaign_id: str, contact_ids_: list[str], send_email_from_email_account_id: str, sequence_no_email: Optional[bool] = None, sequence_unverified_email: Optional[bool] = None, sequence_job_change: Optional[bool] = None, sequence_active_in_other_campaigns: Optional[bool] = None, sequence_finished_in_other_campaigns: Optional[bool] = None, user_id: Optional[str] = None) -> dict[str, Any]:
         """
         Adds specified contact IDs to an emailer campaign sequence with options to control email sending behavior and filtering criteria.
 
@@ -851,7 +851,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def update_contact_status_sequence(self, emailer_campaign_ids_, contact_ids_, mode) -> dict[str, Any]:
+    def update_contact_status_sequence(self, emailer_campaign_ids_: list[str], contact_ids_: list[str], mode: str) -> dict[str, Any]:
         """
         Removes or stops specified contacts from one or more emailer campaigns based on the provided mode.
 
@@ -882,7 +882,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def create_task(self, user_id, contact_ids_, priority, due_at, type, status, note=None) -> Any:
+    def create_task(self, user_id: str, contact_ids_: list[str], priority: str, due_at: str, type: str, status: str, note: Optional[str] = None) -> Any:
         """
         Creates multiple tasks in bulk by specifying user ID, contact IDs, priority, due date, type, status, and an optional note in a single POST request.
 
@@ -917,7 +917,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def search_tasks(self, sort_by_field=None, open_factor_names_=None, page=None, per_page=None) -> dict[str, Any]:
+    def search_tasks(self, sort_by_field: Optional[str] = None, open_factor_names_: Optional[list[str]] = None, page: Optional[int] = None, per_page: Optional[int] = None) -> dict[str, Any]:
         """
         Searches for tasks based on specified criteria including sorting, filtering by open factor names, and supports pagination through page and per_page parameters.
 
@@ -949,7 +949,7 @@ class ApolloApp(APIApplication):
         except ValueError:
             return None
 
-    def get_a_list_of_users(self, page=None, per_page=None) -> dict[str, Any]:
+    def get_a_list_of_users(self, page: Optional[int] = None, per_page: Optional[int] = None) -> dict[str, Any]:
         """
         Searches for users using query parameters for pagination and returns matching results if successful.
 
