@@ -64,6 +64,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            People, important
         """
         request_body_data = None
         url = f"{self.base_url}/people/match"
@@ -93,6 +96,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            People    
         """
         request_body_data = None
         request_body_data = {
@@ -123,6 +129,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Organizations    
         """
         url = f"{self.base_url}/organizations/enrich"
         query_params = {k: v for k, v in [('domain', domain)] if v is not None}
@@ -148,6 +157,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Organizations    
         """
         request_body_data = None
         url = f"{self.base_url}/organizations/bulk_enrich"
@@ -185,6 +197,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            People    
         """
         request_body_data = None
         url = f"{self.base_url}/mixed_people/search"
@@ -221,6 +236,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Organizations    
         """
         request_body_data = None
         url = f"{self.base_url}/mixed_companies/search"
@@ -249,6 +267,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Organizations    
         """
         if organization_id is None:
             raise ValueError("Missing required parameter 'organization_id'.")
@@ -281,6 +302,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Accounts    
         """
         request_body_data = None
         url = f"{self.base_url}/accounts"
@@ -313,6 +337,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Accounts    
         """
         if account_id is None:
             raise ValueError("Missing required parameter 'account_id'.")
@@ -346,6 +373,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Accounts    
         """
         request_body_data = None
         url = f"{self.base_url}/accounts/search"
@@ -373,6 +403,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Accounts    
         """
         request_body_data = None
         url = f"{self.base_url}/accounts/bulk_update"
@@ -400,6 +433,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:        
+            Accounts    
         """
         request_body_data = None
         url = f"{self.base_url}/accounts/update_owners"
@@ -423,6 +459,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Accounts    
         """
         url = f"{self.base_url}/account_stages"
         query_params = {}
@@ -462,6 +501,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         request_body_data = None
         url = f"{self.base_url}/contacts"
@@ -503,6 +545,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         if contact_id is None:
             raise ValueError("Missing required parameter 'contact_id'.")
@@ -536,6 +581,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         request_body_data = None
         url = f"{self.base_url}/contacts/search"
@@ -563,6 +611,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         request_body_data = None
         url = f"{self.base_url}/contacts/update_stages"
@@ -590,6 +641,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         request_body_data = None
         url = f"{self.base_url}/contacts/update_owners"
@@ -613,6 +667,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         url = f"{self.base_url}/contact_stages"
         query_params = {}
@@ -643,6 +700,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Deals    
         """
         request_body_data = None
         url = f"{self.base_url}/opportunities"
@@ -671,6 +731,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Deals    
         """
         url = f"{self.base_url}/opportunities/search"
         query_params = {k: v for k, v in [('sort_by_field', sort_by_field), ('page', page), ('per_page', per_page)] if v is not None}
@@ -705,6 +768,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Deals    
         """
         if opportunity_id is None:
             raise ValueError("Missing required parameter 'opportunity_id'.")
@@ -730,6 +796,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:        
+            Deals    
         """
         url = f"{self.base_url}/opportunity_stages"
         query_params = {}
@@ -764,6 +833,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         if sequence_id is None:
             raise ValueError("Missing required parameter 'sequence_id'.")
@@ -794,6 +866,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Contacts    
         """
         request_body_data = None
         url = f"{self.base_url}/emailer_campaigns/remove_or_stop_contact_ids"
@@ -826,6 +901,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Tasks    
         """
         request_body_data = None
         url = f"{self.base_url}/tasks/bulk_create"
@@ -855,6 +933,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Tasks    
         """
         request_body_data = None
         url = f"{self.base_url}/tasks/search"
@@ -882,6 +963,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Users    
         """
         url = f"{self.base_url}/users/search"
         query_params = {k: v for k, v in [('page', page), ('per_page', per_page)] if v is not None}
@@ -904,6 +988,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Email Accounts    
         """
         url = f"{self.base_url}/email_accounts"
         query_params = {}
@@ -926,6 +1013,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Labels    
         """
         url = f"{self.base_url}/labels"
         query_params = {}
@@ -948,6 +1038,9 @@ class ApolloApp(APIApplication):
         Raises:
             HTTPError: Raised when the API request fails (e.g., non-2XX status code).
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+
+        Tags:
+            Typed Custom Fields    
         """
         url = f"{self.base_url}/typed_custom_fields"
         query_params = {}
