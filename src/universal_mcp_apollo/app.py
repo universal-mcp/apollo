@@ -1,11 +1,44 @@
-from typing import Any
+from typing import Any, Dict
 from universal_mcp.applications import APIApplication
 from universal_mcp.integrations import Integration
+from loguru import logger
 
 class ApolloApp(APIApplication):
     def __init__(self, integration: Integration = None, **kwargs) -> None:
         super().__init__(name='apollo', integration=integration, **kwargs)
         self.base_url = "https://api.apollo.io/api/v1"
+
+    def _get_headers(self) -> Dict[str, str]:
+        """
+        Get the headers for Apollo API requests.
+        Overrides the base class method to use X-Api-Key.
+        """
+        if not self.integration:
+            logger.warning("ApolloApp: No integration configured, returning empty headers.")
+            return {}
+        
+        # ApiKeyIntegration's get_credentials() returns a dict like:
+        # {'api_key': 'your_actual_key_value'}
+        credentials = self.integration.get_credentials()
+        
+        # The key in the credentials dict from ApiKeyIntegration is 'api_key'
+        api_key = credentials.get("api_key") 
+        
+        if not api_key:
+            logger.error("ApolloApp: API key not found in integration credentials for Apollo.")
+            # You might want to raise an error here if an API key is absolutely required
+            # For example: raise ValueError("API key is missing for Apollo integration.")
+            return { # Or return minimal headers if some calls might not need auth (unlikely for Apollo)
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache"
+            }
+
+        logger.debug("ApolloApp: Using X-Api-Key for authentication.")
+        return {
+            "X-Api-Key": api_key,
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache" # Often good practice for APIs
+        }
 
     def people_enrichment(self, first_name=None, last_name=None, name=None, email=None, hashed_email=None, organization_name=None, domain=None, id=None, linkedin_url=None, reveal_personal_emails=None, reveal_phone_number=None, webhook_url=None) -> dict[str, Any]:
         """
