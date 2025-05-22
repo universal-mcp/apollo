@@ -5,657 +5,959 @@ from universal_mcp.integrations import Integration
 class ApolloApp(APIApplication):
     def __init__(self, integration: Integration = None, **kwargs) -> None:
         super().__init__(name='apollo', integration=integration, **kwargs)
-        self.base_url = "{{card_base_url}}"
+        self.base_url = "https://api.apollo.io/api/v1"
 
-    def get_cards(self, page=None, limit=None, id=None, accountId=None, cardId=None, document=None, status=None, startCreateDate=None, endCreateDate=None, startCancelDate=None, endCancelDate=None, startEmbossDate=None, endEmbossDate=None) -> dict[str, Any]:
+    def people_enrichment(self, first_name=None, last_name=None, name=None, email=None, hashed_email=None, organization_name=None, domain=None, id=None, linkedin_url=None, reveal_personal_emails=None, reveal_phone_number=None, webhook_url=None) -> dict[str, Any]:
         """
-        Retrieves a list of cards filtered by parameters such as ID, account ID, status, date ranges, and pagination settings.
+        Matches a person’s profile based on provided identifiers such as name, email, organization, or LinkedIn URL, with options to reveal personal emails and phone numbers.
 
         Args:
-            page (string): Página atual Example: '1'.
-            limit (string): Limite de registros por página Example: '10'.
-            id (string): Id do registro Example: '5e6b6d256148e88ab095270b'.
-            accountId (string): Id da conta do core brancário Example: '{{account_id}}'.
-            cardId (string): Id do cartão Example: '{{card_id}}'.
-            document (string): Documento Example: '52401224408'.
-            status (string): Status do cartão (processing/ created/ active/ blocked/ canceled) Example: 'blocked'.
-            startCreateDate (string): Data inicial da criação do cartão Example: '2020-04-06'.
-            endCreateDate (string): Data final da criação do cartão Example: '2020-04-06'.
-            startCancelDate (string): Data inicial do cancelamento do cartão Example: '2020-04-06'.
-            endCancelDate (string): Data final do cancelamento do cartão Example: '2020-04-16'.
-            startEmbossDate (string): Data inicial do emboçamento do cartão Example: '2020-04-02'.
-            endEmbossDate (string): Data final do emboçamento do cartão Example: '2020-04-20'.
+            first_name (string): The first_name query parameter specifies the first name used to match people in the POST /people/match operation.
+            last_name (string): The last_name parameter, provided in the query string of the POST request, specifies the person's last name to match against records in the system.
+            name (string): Name of the person to match, provided as a query parameter in the POST request.
+            email (string): The email address used as a query parameter to identify or match a person in the POST /people/match request.
+            hashed_email (string): Hashed email address used as a query parameter to identify or match a person in the POST /people/match operation.
+            organization_name (string): The name of the organization to match people against, provided as a query string parameter.
+            domain (string): The domain to match people against, provided as a query string parameter.
+            id (string): The unique identifier for the person to be matched, provided as a query string parameter.
+            linkedin_url (string): The LinkedIn profile URL of the person to be matched.
+            reveal_personal_emails (boolean): Optional boolean query parameter indicating whether to include personal emails in the response, defaulting to false.
+            reveal_phone_number (boolean): Boolean query parameter to indicate whether to include the person's phone number in the response, defaulting to false.
+            webhook_url (string): Specifies the HTTPS endpoint URL to which webhook event notifications will be sent when a matching operation is completed.
 
         Returns:
-            dict[str, Any]: Get Cards - 200
+            dict[str, Any]: 200
 
-        Tags:
-            Apollo Card API
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        url = f"{self.base_url}/cards"
-        query_params = {k: v for k, v in [('page', page), ('limit', limit), ('id', id), ('accountId', accountId), ('cardId', cardId), ('document', document), ('status', status), ('startCreateDate', startCreateDate), ('endCreateDate', endCreateDate), ('startCancelDate', startCancelDate), ('endCancelDate', endCancelDate), ('startEmbossDate', startEmbossDate), ('endEmbossDate', endEmbossDate)] if v is not None}
+        request_body_data = None
+        url = f"{self.base_url}/people/match"
+        query_params = {k: v for k, v in [('first_name', first_name), ('last_name', last_name), ('name', name), ('email', email), ('hashed_email', hashed_email), ('organization_name', organization_name), ('domain', domain), ('id', id), ('linkedin_url', linkedin_url), ('reveal_personal_emails', reveal_personal_emails), ('reveal_phone_number', reveal_phone_number), ('webhook_url', webhook_url)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def bulk_people_enrichment(self, reveal_personal_emails=None, reveal_phone_number=None, webhook_url=None, details=None) -> dict[str, Any]:
+        """
+        Performs a bulk matching operation for people records using posted data, with options to reveal personal emails or phone numbers and specify a webhook URL for result delivery.
+
+        Args:
+            reveal_personal_emails (boolean): Indicates whether to include personal emails in the bulk match results for people, defaulting to false if not specified.
+            reveal_phone_number (boolean): If set to true, includes the phone number in the bulk match response; defaults to false.
+            webhook_url (string): Specifies the URL to which webhook notifications are sent when the bulk match operation completes.
+            details (array): Provide info for each person you want to enrich as an object within this array. Add up to 10 people.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        request_body_data = {
+            'details': details,
+        }
+        request_body_data = {k: v for k, v in request_body_data.items() if v is not None}
+        url = f"{self.base_url}/people/bulk_match"
+        query_params = {k: v for k, v in [('reveal_personal_emails', reveal_personal_emails), ('reveal_phone_number', reveal_phone_number), ('webhook_url', webhook_url)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def organization_enrichment(self, domain) -> dict[str, Any]:
+        """
+        Retrieves enriched organizational data such as industry, revenue, employee count, funding details, and contact information based on a provided domain.
+
+        Args:
+            domain (string): The domain name of the organization to enrich information for, provided as a required query string parameter.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/organizations/enrich"
+        query_params = {k: v for k, v in [('domain', domain)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
-    def card_request(self, accountId=None, cardId=None, externalPrivateLabelAccountId=None, partner=None) -> dict[str, Any]:
+    def bulk_organization_enrichment(self, domains_) -> dict[str, Any]:
         """
-        Creates a new card using the API and returns relevant information, requiring an API key in the request header.
+        Enriches multiple organization profiles by accepting a list of domains and returns detailed data for each, allowing for efficient bulk processing.
 
         Args:
-            accountId (string): accountId Example: '5e668a09605f73004fa22f6e'.
-            cardId (string): cardId Example: '5e95cac932796f1ebcbc31d3'.
-            externalPrivateLabelAccountId (string): externalPrivateLabelAccountId Example: '123456677'.
-            partner (object): partner
-                Example:
-                ```json
-                {
-                  "accountId": "5e668a09605f73004fa22f6e",
-                  "cardId": "5e95cac932796f1ebcbc31d3",
-                  "externalPrivateLabelAccountId": "123456677",
-                  "partner": {
-                    "externalPartnerId": "c4e9dc79-a9f7-4b64-bd0b-16c9c8da7c2f",
-                    "name": "Banco Z",
-                    "urlBase": "https://xyz-core-api.baas.solutions",
-                    "urnAuthorizeTransaction": "/card/transaction",
-                    "urnInformationTransaction": "/card/information",
-                    "urnInternationalTransaction": "/card/transaction/international"
-                  }
-                }
-                ```
+            domains_ (array): An array of domain names to be enriched in bulk for organizational information.
 
         Returns:
-            dict[str, Any]: Create - Status 200
+            dict[str, Any]: 200
 
-        Tags:
-            Apollo Authorize API, important
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        request_body = {
-            'accountId': accountId,
-            'cardId': cardId,
-            'externalPrivateLabelAccountId': externalPrivateLabelAccountId,
-            'partner': partner,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards"
-        query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        request_body_data = None
+        url = f"{self.base_url}/organizations/bulk_enrich"
+        query_params = {k: v for k, v in [('domains[]', domains_)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
-    def webhook_card_created(self, cardId=None, bin=None, id=None, last4Digits=None, privateLabelAccount=None, token=None, validThru=None) -> Any:
+    def people_search(self, person_titles_=None, include_similar_titles=None, person_locations_=None, person_seniorities_=None, organization_locations_=None, q_organization_domains_list_=None, contact_email_status_=None, organization_ids_=None, organization_num_employees_ranges_=None, q_keywords=None, page=None, per_page=None) -> dict[str, Any]:
         """
-        Notifies when a new card is created by sending a POST request to the "/cards/webhook-card-created" endpoint.
+        Searches for people by specified criteria such as titles, locations, seniorities, organization details, and additional filters, returning paginated results via a POST request.
 
         Args:
-            cardId (string): Identifies the specific card associated with the webhook event being processed. Example: '{{card_id}}'.
-            bin (string): bin
-            id (string): id Example: 'fd8c5e2e-055a-434b-95f3-d0975989532a'.
-            last4Digits (string): last4Digits
-            privateLabelAccount (object): privateLabelAccount
-            token (string): token
-            validThru (string): validThru
-                Example:
-                ```json
-                {
-                  "bin": null,
-                  "id": "fd8c5e2e-055a-434b-95f3-d0975989532a",
-                  "last4Digits": null,
-                  "privateLabelAccount": {
-                    "accountId": "ed775fa1-6156-4577-812e-931ff7c430ab",
-                    "codeProposal": null,
-                    "createdAt": "0001-01-01T00:00:00",
-                    "creditCards": [
-                      {
-                        "bin": "230993",
-                        "expirationDate": "0525",
-                        "id": "5cdafd15-da66-4ed0-b206-f84a118eb508",
-                        "last4Digits": "9997",
-                        "status": "created",
-                        "token": "4caad3bc-fefb-4ee9-84e0-ca91e5d31189"
-                      }
-                    ],
-                    "dateProposal": "0001-01-01T00:00:00",
-                    "embossingName": null,
-                    "financialInstitutionId": null,
-                    "id": "fd8c5e2e-055a-434b-95f3-d0975989532a",
-                    "logo": null,
-                    "org": null,
-                    "paymentMethodId": null,
-                    "reference": null,
-                    "status": null,
-                    "updatedAt": "0001-01-01T00:00:00"
-                  },
-                  "token": null,
-                  "validThru": null
-                }
-                ```
+            person_titles_ (array): An array of person titles to filter the search results by.
+            include_similar_titles (boolean): Include similar titles in the search results when set to true; optional boolean query parameter. Example: 'true'.
+            person_locations_ (array): An array of location identifiers to filter the search results by specific person locations.
+            person_seniorities_ (array): An optional array of seniority levels to filter the people in the search results.
+            organization_locations_ (array): An array of organization location identifiers to filter the search results by specific locations.
+            q_organization_domains_list_ (array): An optional query parameter array to filter search results by one or more organization domain names.
+            contact_email_status_ (array): Filter results to only include people whose contact email status matches any of the specified values from the provided array.
+            organization_ids_ (array): An array of organization IDs to filter search results by organization membership.
+            organization_num_employees_ranges_ (array): An array of employee count ranges used to filter organizations by their number of employees in the search query.
+            q_keywords (string): Keyword search query for filtering results in the mixed people search operation.
+            page (integer): The "page" parameter is an integer query parameter used to specify the page number for pagination in the search results.
+            per_page (integer): Number of results to return per page in the search response; optional integer query parameter.
 
         Returns:
-            Any: API response data.
+            dict[str, Any]: 200
 
-        Tags:
-            Apollo Card API
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        request_body = {
-            'bin': bin,
-            'id': id,
-            'last4Digits': last4Digits,
-            'privateLabelAccount': privateLabelAccount,
-            'token': token,
-            'validThru': validThru,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards/webhook-card-created"
-        query_params = {k: v for k, v in [('cardId', cardId)] if v is not None}
-        response = self._post(url, data=request_body, params=query_params)
+        request_body_data = None
+        url = f"{self.base_url}/mixed_people/search"
+        query_params = {k: v for k, v in [('person_titles[]', person_titles_), ('include_similar_titles', include_similar_titles), ('person_locations[]', person_locations_), ('person_seniorities[]', person_seniorities_), ('organization_locations[]', organization_locations_), ('q_organization_domains_list[]', q_organization_domains_list_), ('contact_email_status[]', contact_email_status_), ('organization_ids[]', organization_ids_), ('organization_num_employees_ranges[]', organization_num_employees_ranges_), ('q_keywords', q_keywords), ('page', page), ('per_page', per_page)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
-    def try_webhook_card_created(self, card_id) -> Any:
+    def organization_search(self, organization_num_employees_ranges_=None, organization_locations_=None, organization_not_locations_=None, revenue_range_min=None, revenue_range_max=None, currently_using_any_of_technology_uids_=None, q_organization_keyword_tags_=None, q_organization_name=None, organization_ids_=None, page=None, per_page=None) -> dict[str, Any]:
         """
-        Retrieves information about a specific card using its ID after a webhook card creation event.
+        Searches for mixed companies based on various filters such as employee ranges, locations, revenue, technologies used, keywords, and pagination parameters.
 
         Args:
-            card_id (string): card_id
+            organization_num_employees_ranges_ (array): An array of employee count ranges used to filter organizations by their number of employees in the search query.
+            organization_locations_ (array): An array of organization location identifiers to filter the search results by specific locations.
+            organization_not_locations_ (array): An array of location identifiers to exclude from the organization search results.
+            revenue_range_min (integer): Minimum revenue value (integer) to filter companies by their revenue range in the search query.
+            revenue_range_max (integer): The maximum revenue value for filtering companies in the search results.
+            currently_using_any_of_technology_uids_ (array): An array of technology unique identifiers (UIDs) to filter companies currently using any of the specified technologies.
+            q_organization_keyword_tags_ (array): An array of keyword tags to filter and search organizations by relevant descriptors.
+            q_organization_name (string): Filter the search results by the organization name specified.
+            organization_ids_ (array): An array of organization IDs to filter the search results by specific organizations.
+            page (integer): The page parameter specifies the page number of results to retrieve in the search query for paginated responses.
+            per_page (integer): The number of results to return per page in the paginated response.
 
         Returns:
-            Any: API response data.
+            dict[str, Any]: 200
 
-        Tags:
-            Apollo Card API
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        url = f"{self.base_url}/cards/try-webhook-card-created/{card_id}"
-        query_params = {}
+        request_body_data = None
+        url = f"{self.base_url}/mixed_companies/search"
+        query_params = {k: v for k, v in [('organization_num_employees_ranges[]', organization_num_employees_ranges_), ('organization_locations[]', organization_locations_), ('organization_not_locations[]', organization_not_locations_), ('revenue_range[min]', revenue_range_min), ('revenue_range[max]', revenue_range_max), ('currently_using_any_of_technology_uids[]', currently_using_any_of_technology_uids_), ('q_organization_keyword_tags[]', q_organization_keyword_tags_), ('q_organization_name', q_organization_name), ('organization_ids[]', organization_ids_), ('page', page), ('per_page', per_page)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def organization_jobs_postings(self, organization_id, page=None, per_page=None) -> dict[str, Any]:
+        """
+        Retrieves a paginated list of job postings for the specified organization by organization_id.
+
+        Args:
+            organization_id (string): organization_id
+            page (integer): The "page" parameter specifies the page number for pagination when retrieving job postings for a specific organization.
+            per_page (integer): The number of job postings to return per page in the paginated response.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        if organization_id is None:
+            raise ValueError("Missing required parameter 'organization_id'.")
+        url = f"{self.base_url}/organizations/{organization_id}/job_postings"
+        query_params = {k: v for k, v in [('page', page), ('per_page', per_page)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
-    def get_card(self, card_id) -> dict[str, Any]:
+    def create_an_account(self, name=None, domain=None, owner_id=None, account_stage_id=None, phone=None, raw_address=None) -> dict[str, Any]:
         """
-        Retrieves details for a specific card identified by its unique ID using the provided API key for authentication.
+        Creates a new account resource using provided query parameters such as name, domain, owner ID, account stage ID, phone, and raw address.
 
         Args:
-            card_id (string): card_id
+            name (string): Optional string parameter used to specify the name associated with the account being created.
+            domain (string): The domain query parameter specifies the domain associated with the account being created.
+            owner_id (string): Specifies the identifier of the account owner for the POST operation at the "/accounts" path.
+            account_stage_id (string): Identifies the account stage by its unique ID for filtering or processing accounts in the POST request.
+            phone (string): Optional phone number provided as a string to be used during the account creation process.
+            raw_address (string): The raw_address query parameter is a string representing the unprocessed or original address input to be used in the account creation request.
 
         Returns:
-            dict[str, Any]: Get - Status 200
+            dict[str, Any]: 200
 
-        Tags:
-            Apollo Card API, important
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        url = f"{self.base_url}/cards/{card_id}"
-        query_params = {}
-        response = self._get(url, params=query_params)
+        request_body_data = None
+        url = f"{self.base_url}/accounts"
+        query_params = {k: v for k, v in [('name', name), ('domain', domain), ('owner_id', owner_id), ('account_stage_id', account_stage_id), ('phone', phone), ('raw_address', raw_address)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
-    def block(self, card_id, isVirtual=None) -> Any:
+    def update_an_account(self, account_id, name=None, domain=None, owner_id=None, account_stage_id=None, raw_address=None, phone=None) -> dict[str, Any]:
         """
-        Updates the blocking status of a specified card using the PATCH method and returns a success status.
-
-        Args:
-            card_id (string): card_id
-            isVirtual (boolean): isVirtual
-                Example:
-                ```json
-                {
-                  "isVirtual": true
-                }
-                ```
-
-        Returns:
-            Any: Block - Status 204
-
-        Tags:
-            Apollo Card API, important
-        """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        request_body = {
-            'isVirtual': isVirtual,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards/{card_id}/block"
-        query_params = {}
-        response = self._patch(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
-
-    def unblock(self, card_id, isVirtual=None) -> Any:
-        """
-        Unblocks a specified card and updates its status to allow transactions using the PATCH method.
-
-        Args:
-            card_id (string): card_id
-            isVirtual (boolean): isVirtual
-                Example:
-                ```json
-                {
-                  "isVirtual": false
-                }
-                ```
-
-        Returns:
-            Any: Unblock - Status 204
-
-        Tags:
-            Apollo Card API
-        """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        request_body = {
-            'isVirtual': isVirtual,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards/{card_id}/unblock"
-        query_params = {}
-        response = self._patch(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
-
-    def cancel(self, card_id, description=None, reason=None) -> Any:
-        """
-        Cancels the specified card using the provided identifier and returns a no-content response upon success.
-
-        Args:
-            card_id (string): card_id
-            description (string): description Example: 'Perda'.
-            reason (string): reason
-                Example:
-                ```json
-                {
-                  "description": "Perda",
-                  "reason": "P"
-                }
-                ```
-
-        Returns:
-            Any: Cancel - Status 204
-
-        Tags:
-            Apollo Card API
-        """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        request_body = {
-            'description': description,
-            'reason': reason,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards/{card_id}/cancel"
-        query_params = {}
-        response = self._patch(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
-
-    def virtual_card_create(self, card_id) -> dict[str, Any]:
-        """
-        Creates a virtual representation of a card identified by `{card_id}` using the provided API key.
-
-        Args:
-            card_id (string): card_id
-
-        Returns:
-            dict[str, Any]: Status 200
-
-        Tags:
-            Apollo Card API
-        """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        url = f"{self.base_url}/cards/{card_id}/virtual"
-        query_params = {}
-        response = self._post(url, data={}, params=query_params)
-        response.raise_for_status()
-        return response.json()
-
-    def virtual_card_security_code(self, card_id) -> dict[str, Any]:
-        """
-        Retrieves the security code for a specified virtual card (identified by card_id) using an API key for authentication.
-
-        Args:
-            card_id (string): card_id
-
-        Returns:
-            dict[str, Any]: Get - Status 200
-
-        Tags:
-            Apollo Card API
-        """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        url = f"{self.base_url}/cards/{card_id}/virtual/security-code"
-        response = self._get(url)
-        response.raise_for_status()
-        return response.json()
-
-    def card_password_create(self, card_id, password=None, passwordConfirm=None) -> Any:
-        """
-        Updates the password for a specific card, identified by `{card_id}`, using a POST request to the `/cards/{card_id}/password` endpoint, with authentication provided via an `apikey` in the request header.
-
-        Args:
-            card_id (string): card_id
-            password (string): password Example: '1234'.
-            passwordConfirm (string): passwordConfirm
-                Example:
-                ```json
-                {
-                  "password": "1234",
-                  "passwordConfirm": "1234"
-                }
-                ```
-
-        Returns:
-            Any: Block - Status 204
-
-        Tags:
-            Apollo Card API
-        """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        request_body = {
-            'password': password,
-            'passwordConfirm': passwordConfirm,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards/{card_id}/password"
-        query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
-
-    def card_password_change(self, card_id, password=None, passwordConfirm=None, passwordOld=None) -> Any:
-        """
-        Updates the password for the specified card using the provided apikey and returns a success status.
-
-        Args:
-            card_id (string): card_id
-            password (string): password Example: '1234'.
-            passwordConfirm (string): passwordConfirm Example: '1234'.
-            passwordOld (string): passwordOld
-                Example:
-                ```json
-                {
-                  "password": "1234",
-                  "passwordConfirm": "1234",
-                  "passwordOld": "1234"
-                }
-                ```
-
-        Returns:
-            Any: Block - Status 204
-
-        Tags:
-            Apollo Card API
-        """
-        if card_id is None:
-            raise ValueError("Missing required parameter 'card_id'")
-        request_body = {
-            'password': password,
-            'passwordConfirm': passwordConfirm,
-            'passwordOld': passwordOld,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards/{card_id}/password"
-        query_params = {}
-        response = self._patch(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
-
-    def webhook_autorize(self, acquirer_code=None, additional_data=None, authorization_code_reason=None, capture=None, card_acceptor=None, card_id=None, cardholder_billing=None, mti=None, pan=None, pinblock=None, pos_data=None, processing_code=None, settlement_date=None, settlement_value=None, stan=None) -> Any:
-        """
-        Authorizes a card transaction via a POST request to the endpoint, supporting idempotency through a header key.
-
-        Args:
-            acquirer_code (string): acquirer_code Example: '013445'.
-            additional_data (string): additional_data
-            authorization_code_reason (string): authorization_code_reason Example: '00'.
-            capture (object): capture
-            card_acceptor (object): card_acceptor
-            card_id (string): card_id Example: '52c6ed22-b256-4365-ad56-a7f64868bf0b'.
-            cardholder_billing (object): cardholder_billing
-            mti (string): mti Example: '0100'.
-            pan (string): pan Example: 'xxxxxxxxxxx11962'.
-            pinblock (string): pinblock Example: '000000xxxxxxxxx0'.
-            pos_data (string): pos_data Example: '1025108006000826NN18 8JG'.
-            processing_code (string): processing_code Example: '000000'.
-            settlement_date (string): settlement_date Example: '2020-05-14T00:00:00.000Z'.
-            settlement_value (object): settlement_value
-            stan (string): stan
-                Example:
-                ```json
-                {
-                  "acquirer_code": "013445",
-                  "additional_data": "",
-                  "authorization_code_reason": "00",
-                  "capture": {
-                    "country": "GBR",
-                    "entry_mode": "812",
-                    "pos_capture_time": "2020-05-14T22:04:41.000",
-                    "scheme_capture_time": "2020-05-14T20:04:41.000Z",
-                    "value": {
-                      "amount": 10000,
-                      "currency": "USD"
-                    }
-                  },
-                  "card_acceptor": {
-                    "city": "London",
-                    "country_or_us_state": "GBR",
-                    "mcc": "5817",
-                    "merchant_id": "5xxxxxxxxx203433",
-                    "name": "PADDLE.NET* PADDLE",
-                    "terminal_id": ""
-                  },
-                  "card_id": "52c6ed22-b256-4365-ad56-a7f64868bf0b",
-                  "cardholder_billing": {
-                    "amount": 60000,
-                    "conversion_rate": "65856650",
-                    "currency": "BRL"
-                  },
-                  "mti": "0100",
-                  "pan": "xxxxxxxxxxx11962",
-                  "pinblock": "000000xxxxxxxxx0",
-                  "pos_data": "1025108006000826NN18 8JG",
-                  "processing_code": "000000",
-                  "settlement_date": "2020-05-14T00:00:00.000Z",
-                  "settlement_value": {
-                    "amount": 10000,
-                    "currency": "USD"
-                  },
-                  "stan": "22xxxxx"
-                }
-                ```
-
-        Returns:
-            Any: API response data.
-
-        Tags:
-            Apollo Authorize API
-        """
-        request_body = {
-            'acquirer_code': acquirer_code,
-            'additional_data': additional_data,
-            'authorization_code_reason': authorization_code_reason,
-            'capture': capture,
-            'card_acceptor': card_acceptor,
-            'card_id': card_id,
-            'cardholder_billing': cardholder_billing,
-            'mti': mti,
-            'pan': pan,
-            'pinblock': pinblock,
-            'pos_data': pos_data,
-            'processing_code': processing_code,
-            'settlement_date': settlement_date,
-            'settlement_value': settlement_value,
-            'stan': stan,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/cards/authorize"
-        query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
-
-    def webhook_authorize(self, account_id=None, amount=None, card_acceptor=None, currency=None, date=None, last_4_digits=None, stan=None, status=None) -> Any:
-        """
-        Processes a card transaction using the provided API key and returns a success status upon completion.
+        Updates the account identified by {account_id} with new provided values or replaces its details if required, supporting various account attributes as query parameters[1][2][5].
 
         Args:
             account_id (string): account_id
-            amount (number): amount Example: '0'.
-            card_acceptor (object): card_acceptor
-            currency (string): currency Example: 'BRL'.
-            date (string): date
-            last_4_digits (string): last_4_digits
-            stan (string): stan
-            status (string): status
-                Example:
-                ```json
-                {
-                  "account_id": "",
-                  "amount": 0,
-                  "card_acceptor": {
-                    "Name": "",
-                    "city": "",
-                    "country_or_us_state": "",
-                    "mcc": "",
-                    "merchant_id": "",
-                    "terminal_id": ""
-                  },
-                  "currency": "BRL",
-                  "date": "",
-                  "last_4_digits": "",
-                  "stan": "",
-                  "status": "approved"
-                }
-                ```
+            name (string): Optional query parameter to specify the name associated with the account during the update operation.
+            domain (string): The domain query parameter specifies the domain associated with the account to be updated.
+            owner_id (string): Specifies the unique identifier of the owner as a query string parameter for updating an account.
+            account_stage_id (string): The `account_stage_id` query parameter specifies the identifier of the stage to which the account should be updated.
+            raw_address (string): The raw_address query parameter is a string representing the unstructured or original address data to update for the specified account.
+            phone (string): The phone number to update for the specified account, provided as a query string parameter.
 
         Returns:
-            Any: API response data.
+            dict[str, Any]: 200
 
-        Tags:
-            Core API
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        request_body = {
-            'account_id': account_id,
-            'amount': amount,
-            'card_acceptor': card_acceptor,
-            'currency': currency,
-            'date': date,
-            'last_4_digits': last_4_digits,
-            'stan': stan,
-            'status': status,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/card/transaction"
-        query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        if account_id is None:
+            raise ValueError("Missing required parameter 'account_id'.")
+        request_body_data = None
+        url = f"{self.base_url}/accounts/{account_id}"
+        query_params = {k: v for k, v in [('name', name), ('domain', domain), ('owner_id', owner_id), ('account_stage_id', account_stage_id), ('raw_address', raw_address), ('phone', phone)] if v is not None}
+        response = self._put(url, data=request_body_data, params=query_params, content_type='application/json')
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
-    def webhook_authorize_information(self, account_id=None, amount=None, card_acceptor=None, currency=None, date=None, international=None, last_4_digits=None, stan=None) -> Any:
+    def search_for_accounts(self, q_organization_name=None, account_stage_ids_=None, sort_by_field=None, sort_ascending=None, page=None, per_page=None) -> dict[str, Any]:
         """
-        Submits card information to the API using an "apikey" header for authentication and returns a success status upon completion.
+        Searches for accounts using the specified organization name, account stages, and sorting preferences, returning a paginated list of results.
 
         Args:
-            account_id (string): account_id
-            amount (number): amount Example: '0'.
-            card_acceptor (object): card_acceptor
-            currency (string): currency Example: 'BRL'.
-            date (string): date
-            international (object): international
-            last_4_digits (string): last_4_digits
-            stan (string): stan
-                Example:
-                ```json
-                {
-                  "account_id": "",
-                  "amount": 0,
-                  "card_acceptor": {
-                    "Name": "",
-                    "city": "",
-                    "country_or_us_state": "",
-                    "mcc": "",
-                    "merchant_id": "",
-                    "terminal_id": ""
-                  },
-                  "currency": "BRL",
-                  "date": "",
-                  "international": {
-                    "capture_amount": 0,
-                    "capture_currency": "",
-                    "conversion_rate": "",
-                    "settlement_amount": 0,
-                    "settlement_currency": ""
-                  },
-                  "last_4_digits": "",
-                  "stan": ""
-                }
-                ```
+            q_organization_name (string): Search for accounts by specifying the organization name in this query parameter.
+            account_stage_ids_ (array): Filter accounts by specifying one or more account stage IDs to include in the search results.
+            sort_by_field (string): The "sort_by_field" query parameter specifies the name of the field by which the search results should be sorted in the account search operation.
+            sort_ascending (boolean): If true, results will be sorted in ascending order; defaults to false (descending order).
+            page (integer): The page query parameter specifies the page number of the search results to retrieve for the accounts search operation.
+            per_page (integer): Controls the number of results returned per page in the search results.
 
         Returns:
-            Any: API response data.
+            dict[str, Any]: 200
 
-        Tags:
-            Core API
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        request_body = {
-            'account_id': account_id,
-            'amount': amount,
-            'card_acceptor': card_acceptor,
-            'currency': currency,
-            'date': date,
-            'international': international,
-            'last_4_digits': last_4_digits,
-            'stan': stan,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/card/information"
-        query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        request_body_data = None
+        url = f"{self.base_url}/accounts/search"
+        query_params = {k: v for k, v in [('q_organization_name', q_organization_name), ('account_stage_ids[]', account_stage_ids_), ('sort_by_field', sort_by_field), ('sort_ascending', sort_ascending), ('page', page), ('per_page', per_page)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
-    def webhook_international_transactions(self, Date=None) -> dict[str, Any]:
+    def update_account_stage(self, account_ids_, account_stage_id) -> dict[str, Any]:
         """
-        Retrieves data linked to the specified date using a GET request at the "/adefinir" endpoint, authenticated via an API key in the header.
+        Updates multiple accounts in bulk using the provided account IDs and stage ID.
 
         Args:
-            Date (string): Data da transação Example: '2020-01-20'.
+            account_ids_ (array): Array of account IDs to be updated in bulk, passed as query parameters and required for the operation.
+            account_stage_id (string): Specifies the unique identifier of the account stage to apply in the bulk update operation.
 
         Returns:
-            dict[str, Any]: 200 OK
+            dict[str, Any]: 200
 
-        Tags:
-            Core API
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
         """
-        url = f"{self.base_url}/adefinir"
-        query_params = {k: v for k, v in [('Date', Date)] if v is not None}
+        request_body_data = None
+        url = f"{self.base_url}/accounts/bulk_update"
+        query_params = {k: v for k, v in [('account_ids[]', account_ids_), ('account_stage_id', account_stage_id)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def update_account_ownership(self, account_ids_, owner_id) -> dict[str, Any]:
+        """
+        Updates the owners of multiple accounts by specifying the account IDs and the new owner ID via a POST request.
+
+        Args:
+            account_ids_ (array): Array of account IDs to update owners for, specified as query parameters for POST /accounts/update_owners, required.
+            owner_id (string): The unique identifier of the owner to update, passed as a required query parameter.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/accounts/update_owners"
+        query_params = {k: v for k, v in [('account_ids[]', account_ids_), ('owner_id', owner_id)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def list_account_stages(self) -> dict[str, Any]:
+        """
+        Retrieves a list of account stages available in the system.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/account_stages"
+        query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def create_a_contact(self, first_name=None, last_name=None, organization_name=None, title=None, account_id=None, email=None, website_url=None, label_names_=None, contact_stage_id=None, present_raw_address=None, direct_phone=None, corporate_phone=None, mobile_phone=None, home_phone=None, other_phone=None) -> dict[str, Any]:
+        """
+        Creates a new contact record with provided details such as name, organization, title, email, account ID, phone numbers, address, and labels, returning a success or error response.
+
+        Args:
+            first_name (string): The first_name query parameter specifies the contact's first name as a string for the POST /contacts operation.
+            last_name (string): The last_name query parameter specifies the contact's last name as a string for the POST /contacts operation.
+            organization_name (string): Specifies the name of the organization to associate with the contact being created.
+            title (string): The "title" query parameter is a string used to specify the title associated with the contact being created.
+            account_id (string): Identifies the account associated with the contact being created.
+            email (string): The email address to associate with the new contact, provided as a query string parameter.
+            website_url (string): The website_url query parameter specifies the URL of the contact's website to be associated when creating a contact.
+            label_names_ (array): An array of label names to assign to the contact, passed as query parameters.
+            contact_stage_id (string): The contact_stage_id query parameter specifies the identifier of the contact stage to assign to the new contact.
+            present_raw_address (string): Indicates whether to include the raw address in the contact information.
+            direct_phone (string): The direct_phone query parameter specifies the direct phone number associated with the contact being created.
+            corporate_phone (string): Optional string parameter to specify the corporate phone number of a contact.
+            mobile_phone (string): The mobile_phone query parameter is a string used to specify the contact's mobile phone number when creating a new contact via the POST /contacts endpoint.
+            home_phone (string): The home_phone query parameter is a string representing the contact's home phone number to be included when creating a new contact.
+            other_phone (string): Additional phone number for the contact provided as a query parameter.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/contacts"
+        query_params = {k: v for k, v in [('first_name', first_name), ('last_name', last_name), ('organization_name', organization_name), ('title', title), ('account_id', account_id), ('email', email), ('website_url', website_url), ('label_names[]', label_names_), ('contact_stage_id', contact_stage_id), ('present_raw_address', present_raw_address), ('direct_phone', direct_phone), ('corporate_phone', corporate_phone), ('mobile_phone', mobile_phone), ('home_phone', home_phone), ('other_phone', other_phone)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def update_a_contact(self, contact_id, first_name=None, last_name=None, organization_name=None, title=None, account_id=None, email=None, website_url=None, label_names_=None, contact_stage_id=None, present_raw_address=None, direct_phone=None, corporate_phone=None, mobile_phone=None, home_phone=None, other_phone=None) -> dict[str, Any]:
+        """
+        Updates an existing contact identified by contact_id with provided details such as name, organization, email, phone numbers, and labels.
+
+        Args:
+            contact_id (string): contact_id
+            first_name (string): The first_name query parameter specifies the contact's first name to update for the given contact_id.
+            last_name (string): The last name of the contact to update, provided as a string in the query parameters.
+            organization_name (string): The organization_name query parameter specifies the name of the organization associated with the contact to be updated.
+            title (string): A string query parameter used to specify the title, typically associated with a contact's role or designation, for the PUT operation at the /contacts/{contact_id} endpoint.
+            account_id (string): Unique identifier of the account associated with the contact, used for authentication and authorization purposes.
+            email (string): Optional string parameter for specifying the email address associated with the contact, used in the query for updating a contact via the PUT operation.
+            website_url (string): The website_url query parameter specifies the contact's website URL to be updated or set.
+            label_names_ (array): An array of label names to be assigned to the contact, passed as separate query parameters.
+            contact_stage_id (string): The contact_stage_id query parameter specifies the unique identifier of the stage to assign to the contact.
+            present_raw_address (string): The raw present address of the contact to update, provided as a string in the query parameters.
+            direct_phone (string): Specifies the direct phone number to be updated for the contact, provided as a string in the query string.
+            corporate_phone (string): The corporate_phone query parameter specifies the contact's corporate phone number as a string for updating the contact information.
+            mobile_phone (string): The mobile_phone query parameter specifies the updated mobile phone number for the contact identified by contact_id.
+            home_phone (string): The home_phone query parameter specifies the contact's home phone number to be updated.
+            other_phone (string): Optional phone number for an alternative or secondary contact method, included as a query parameter.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        if contact_id is None:
+            raise ValueError("Missing required parameter 'contact_id'.")
+        request_body_data = None
+        url = f"{self.base_url}/contacts/{contact_id}"
+        query_params = {k: v for k, v in [('first_name', first_name), ('last_name', last_name), ('organization_name', organization_name), ('title', title), ('account_id', account_id), ('email', email), ('website_url', website_url), ('label_names[]', label_names_), ('contact_stage_id', contact_stage_id), ('present_raw_address', present_raw_address), ('direct_phone', direct_phone), ('corporate_phone', corporate_phone), ('mobile_phone', mobile_phone), ('home_phone', home_phone), ('other_phone', other_phone)] if v is not None}
+        response = self._put(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def search_for_contacts(self, q_keywords=None, contact_stage_ids_=None, sort_by_field=None, sort_ascending=None, per_page=None, page=None) -> dict[str, Any]:
+        """
+        Searches contacts based on keywords, contact stage IDs, and other query parameters, returning a paginated and sortable list of matching contacts.
+
+        Args:
+            q_keywords (string): String parameter for specifying keywords to search for in contacts.
+            contact_stage_ids_ (array): Array of contact stage IDs to filter contacts by their associated stages in the search query.
+            sort_by_field (string): The "sort_by_field" query parameter specifies the field name by which the search results for contacts should be sorted.
+            sort_ascending (boolean): Determines whether search results are sorted in ascending order; defaults to false if omitted.
+            per_page (integer): The number of results to return per page in the search response.
+            page (integer): The page query parameter specifies the integer page number for paginated search results in the contacts search operation.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/contacts/search"
+        query_params = {k: v for k, v in [('q_keywords', q_keywords), ('contact_stage_ids[]', contact_stage_ids_), ('sort_by_field', sort_by_field), ('sort_ascending', sort_ascending), ('per_page', per_page), ('page', page)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def update_contact_stage(self, contact_ids_, contact_stage_id) -> dict[str, Any]:
+        """
+        Updates the stages of specified contacts using their IDs and a target stage ID.
+
+        Args:
+            contact_ids_ (array): Array of contact IDs to specify which contacts' stages should be updated in the request.
+            contact_stage_id (string): The unique identifier of the contact stage to update, provided as a required query parameter.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/contacts/update_stages"
+        query_params = {k: v for k, v in [('contact_ids[]', contact_ids_), ('contact_stage_id', contact_stage_id)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def update_contact_ownership(self, contact_ids_, owner_id) -> dict[str, Any]:
+        """
+        Updates the owners of multiple contacts by assigning a specified owner ID to the given list of contact IDs.
+
+        Args:
+            contact_ids_ (array): Array of contact IDs to specify which contacts' owners should be updated.
+            owner_id (string): The "owner_id" parameter is a required string value passed in the query string, specifying the ID of the owner to be updated in the contact.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/contacts/update_owners"
+        query_params = {k: v for k, v in [('contact_ids[]', contact_ids_), ('owner_id', owner_id)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def list_contact_stages(self) -> Any:
+        """
+        Retrieves a list of available contact stages from the system.
+
+        Returns:
+            Any: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/contact_stages"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def create_deal(self, name, owner_id=None, account_id=None, amount=None, opportunity_stage_id=None, closed_date=None) -> dict[str, Any]:
+        """
+        Creates a new opportunity with the specified parameters such as name, owner ID, account ID, amount, opportunity stage ID, and closed date.
+
+        Args:
+            name (string): The "name" query parameter is a required string specifying the name associated with the opportunity to be created.
+            owner_id (string): The owner_id query parameter specifies the ID of the user who will be assigned as the owner of the opportunity.
+            account_id (string): Unique identifier for the account associated with the opportunity, passed as a string query parameter.
+            amount (string): Specifies the monetary amount, as a string, associated with the opportunity when creating or modifying it via a POST request.
+            opportunity_stage_id (string): Unique identifier for the opportunity stage, passed as a query parameter.
+            closed_date (string): The date when the opportunity was closed, provided as a string in the query parameters.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/opportunities"
+        query_params = {k: v for k, v in [('name', name), ('owner_id', owner_id), ('account_id', account_id), ('amount', amount), ('opportunity_stage_id', opportunity_stage_id), ('closed_date', closed_date)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def list_all_deals(self, sort_by_field=None, page=None, per_page=None) -> dict[str, Any]:
+        """
+        Searches for opportunities with optional sorting and pagination parameters and returns the matching results.
+
+        Args:
+            sort_by_field (string): Specifies the field by which the search results for opportunities should be sorted.
+            page (integer): Specifies the page number of results to retrieve from a paginated list of opportunities.
+            per_page (integer): The number of results to return per page in the paginated response.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/opportunities/search"
+        query_params = {k: v for k, v in [('sort_by_field', sort_by_field), ('page', page), ('per_page', per_page)] if v is not None}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def update_deal(self, opportunity_id, owner_id=None, name=None, amount=None, opportunity_stage_id=None, closed_date=None, is_closed=None, is_won=None, source=None, account_id=None) -> dict[str, Any]:
+        """
+        Updates an opportunity with the specified `opportunity_id` by applying partial modifications using query parameters to change attributes such as owner, name, amount, stage, and status.
+
+        Args:
+            opportunity_id (string): opportunity_id
+            owner_id (string): The owner_id query parameter specifies the ID of the user to be assigned as the owner of the opportunity; if omitted, the user performing the action will be assigned as the owner.
+            name (string): The "name" query parameter is a string used to update or modify the name attribute of the specified opportunity.
+            amount (string): Optional amount to update for the specified opportunity, provided as a string query parameter.
+            opportunity_stage_id (string): The ID of the opportunity stage to update, provided as a query parameter.
+            closed_date (string): Specifies the date when the opportunity was closed, formatted as a string, and must be passed as a query parameter.
+            is_closed (boolean): Specifies whether the opportunity should be marked as closed (true) or open (false) when updating the opportunity.
+            is_won (boolean): Specifies whether to mark the opportunity as won (true) or not (false) in the PATCH operation.
+            source (string): Specifies the source of the update for the opportunity, passed as a string query parameter.
+            account_id (string): account_id is a string query parameter specifying the unique identifier of the account associated with the opportunity to be updated.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        if opportunity_id is None:
+            raise ValueError("Missing required parameter 'opportunity_id'.")
+        request_body_data = None
+        url = f"{self.base_url}/opportunities/{opportunity_id}"
+        query_params = {k: v for k, v in [('owner_id', owner_id), ('name', name), ('amount', amount), ('opportunity_stage_id', opportunity_stage_id), ('closed_date', closed_date), ('is_closed', is_closed), ('is_won', is_won), ('source', source), ('account_id', account_id)] if v is not None}
+        response = self._patch(url, data=request_body_data, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def list_deal_stages(self) -> dict[str, Any]:
+        """
+        Retrieves a list of opportunity stages representing different phases in the sales pipeline, such as New Lead, Negotiating, and Closed.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/opportunity_stages"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def add_contacts_to_sequence(self, sequence_id, emailer_campaign_id, contact_ids_, send_email_from_email_account_id, sequence_no_email=None, sequence_unverified_email=None, sequence_job_change=None, sequence_active_in_other_campaigns=None, sequence_finished_in_other_campaigns=None, user_id=None) -> dict[str, Any]:
+        """
+        Adds specified contact IDs to an emailer campaign sequence with options to control email sending behavior and filtering criteria.
+
+        Args:
+            sequence_id (string): sequence_id
+            emailer_campaign_id (string): The unique identifier of the emailer campaign to which the contact IDs will be added, provided as a required string query parameter.
+            contact_ids_ (array): Array of contact IDs to be added to the email campaign sequence, provided as query parameters.
+            send_email_from_email_account_id (string): The ID of the email account from which the email will be sent, provided as a required query parameter.
+            sequence_no_email (boolean): When set to true, the sequence_no_email parameter prevents sending emails to the added contacts in the specified sequence; defaults to false.
+            sequence_unverified_email (boolean): Include this parameter as true to add contacts with unverified email addresses to the sequence; defaults to false.
+            sequence_job_change (boolean): Indicates whether the addition of contact IDs should trigger a sequence job change; defaults to false.
+            sequence_active_in_other_campaigns (boolean): Indicates whether the contact IDs should also be checked for active presence in other email sequences.
+            sequence_finished_in_other_campaigns (boolean): Determines whether to include contacts who have already completed the sequence in other campaigns (default: false).
+            user_id (string): The user ID to associate with the contact IDs being added, provided as a query string parameter.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        if sequence_id is None:
+            raise ValueError("Missing required parameter 'sequence_id'.")
+        request_body_data = None
+        url = f"{self.base_url}/emailer_campaigns/{sequence_id}/add_contact_ids"
+        query_params = {k: v for k, v in [('emailer_campaign_id', emailer_campaign_id), ('contact_ids[]', contact_ids_), ('send_email_from_email_account_id', send_email_from_email_account_id), ('sequence_no_email', sequence_no_email), ('sequence_unverified_email', sequence_unverified_email), ('sequence_job_change', sequence_job_change), ('sequence_active_in_other_campaigns', sequence_active_in_other_campaigns), ('sequence_finished_in_other_campaigns', sequence_finished_in_other_campaigns), ('user_id', user_id)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def update_contact_status_sequence(self, emailer_campaign_ids_, contact_ids_, mode) -> dict[str, Any]:
+        """
+        Removes or stops specified contacts from one or more emailer campaigns based on the provided mode.
+
+        Args:
+            emailer_campaign_ids_ (array): **Required array of emailer campaign IDs to remove or stop contacts from.**
+            contact_ids_ (array): Array of contact IDs to be removed or stopped in the emailer campaign, provided as query parameters.
+            mode (string): Mode query parameter specifying the action type to remove or stop contact IDs in the emailer campaign.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/emailer_campaigns/remove_or_stop_contact_ids"
+        query_params = {k: v for k, v in [('emailer_campaign_ids[]', emailer_campaign_ids_), ('contact_ids[]', contact_ids_), ('mode', mode)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def create_task(self, user_id, contact_ids_, priority, due_at, type, status, note=None) -> Any:
+        """
+        Creates multiple tasks in bulk by specifying user ID, contact IDs, priority, due date, type, status, and an optional note in a single POST request.
+
+        Args:
+            user_id (string): Specifies the unique identifier of the user for whom the bulk tasks are being created.
+            contact_ids_ (array): Array of contact IDs to associate with the tasks being created in bulk.
+            priority (string): The priority query parameter specifies the urgency level for the bulk creation of tasks and is required for the POST /tasks/bulk_create operation.
+            due_at (string): Due date for all tasks to be created, specified as a string in the query parameters.
+            type (string): The "type" query parameter specifies the category or classification of tasks to be created in bulk and is required for the POST /tasks/bulk_create operation.
+            status (string): The status query parameter specifies the current state to assign to all tasks being created in bulk.
+            note (string): Optional string query parameter to add a note or comment associated with the bulk task creation request.
+
+        Returns:
+            Any: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/tasks/bulk_create"
+        query_params = {k: v for k, v in [('user_id', user_id), ('contact_ids[]', contact_ids_), ('priority', priority), ('due_at', due_at), ('type', type), ('status', status), ('note', note)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def search_tasks(self, sort_by_field=None, open_factor_names_=None, page=None, per_page=None) -> dict[str, Any]:
+        """
+        Searches for tasks based on specified criteria including sorting, filtering by open factor names, and supports pagination through page and per_page parameters.
+
+        Args:
+            sort_by_field (string): Specifies the field to sort the search results by for the task search operation.
+            open_factor_names_ (array): Array of factor names to filter open tasks by, specified as query parameters.
+            page (integer): The page query parameter specifies the page number for paginated search results in the POST /tasks/search operation.
+            per_page (integer): The "per_page" query parameter specifies the maximum number of task results to return on a single page in the search response.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/tasks/search"
+        query_params = {k: v for k, v in [('sort_by_field', sort_by_field), ('open_factor_names[]', open_factor_names_), ('page', page), ('per_page', per_page)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def get_a_list_of_users(self, page=None, per_page=None) -> dict[str, Any]:
+        """
+        Searches for users using query parameters for pagination and returns matching results if successful.
+
+        Args:
+            page (integer): Specifies the page number of paginated results for the user search operation.
+            per_page (integer): The "per_page" query parameter specifies the maximum number of user records to return per page in the search results.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/users/search"
+        query_params = {k: v for k, v in [('page', page), ('per_page', per_page)] if v is not None}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def get_a_list_of_email_accounts(self) -> dict[str, Any]:
+        """
+        Retrieves a list of email accounts accessible to the user.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/email_accounts"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def get_a_list_of_all_liststags(self) -> list[Any]:
+        """
+        Retrieves a list of labels using the GET method, returning a successful response with a 200 status code, and handles unauthorized access with 401 and 403 status codes, along with rate limit errors indicated by a 429 status code.
+
+        Returns:
+            list[Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/labels"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+
+    def get_a_list_of_all_custom_fields(self) -> dict[str, Any]:
+        """
+        Retrieves a list of typed custom fields available in the system.
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        url = f"{self.base_url}/typed_custom_fields"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
 
     def list_tools(self):
         return [
-            self.get_cards,
-            self.card_request,
-            self.webhook_card_created,
-            self.try_webhook_card_created,
-            self.get_card,
-            self.block,
-            self.unblock,
-            self.cancel,
-            self.virtual_card_create,
-            self.virtual_card_security_code,
-            self.card_password_create,
-            self.card_password_change,
-            self.webhook_autorize,
-            self.webhook_authorize,
-            self.webhook_authorize_information,
-            self.webhook_international_transactions
+            self.people_enrichment,
+            self.bulk_people_enrichment,
+            self.organization_enrichment,
+            self.bulk_organization_enrichment,
+            self.people_search,
+            self.organization_search,
+            self.organization_jobs_postings,
+            self.create_an_account,
+            self.update_an_account,
+            self.search_for_accounts,
+            self.update_account_stage,
+            self.update_account_ownership,
+            self.list_account_stages,
+            self.create_a_contact,
+            self.update_a_contact,
+            self.search_for_contacts,
+            self.update_contact_stage,
+            self.update_contact_ownership,
+            self.list_contact_stages,
+            self.create_deal,
+            self.list_all_deals,
+            self.update_deal,
+            self.list_deal_stages,
+            self.add_contacts_to_sequence,
+            self.update_contact_status_sequence,
+            self.create_task,
+            self.search_tasks,
+            self.get_a_list_of_users,
+            self.get_a_list_of_email_accounts,
+            self.get_a_list_of_all_liststags,
+            self.get_a_list_of_all_custom_fields
         ]
