@@ -1052,6 +1052,61 @@ class ApolloApp(APIApplication):
             return response.json()
         except ValueError:
             return None
+        
+    def view_deal(self, opportunity_id: str) -> dict[str, Any]:
+        """
+        View Deal by opportunity_id
+
+        Args:
+            opportunity_id (string): opportunity_id
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        if opportunity_id is None:
+            raise ValueError("Missing required parameter 'opportunity_id'.")
+        url = f"{self.base_url}/opportunities/{opportunity_id}"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None
+        
+    def search_for_sequences(self, q_name: Optional[str] = None, page: Optional[str] = None, per_page: Optional[str] = None) -> dict[str, Any]:
+        """
+        Search for Sequences by name
+
+        Args:
+            q_name (string): Add keywords to narrow the search of the sequences in your team's Apollo account. <br><br>Keywords should directly match at least part of a sequence's name. For example, searching the keyword `marketing` might return the result `NY Marketing Sequence`, but not `NY Marketer Conference 2025 attendees`. <br><br>This parameter only searches sequence names, not other sequence fields. <br><br>Example: `marketing conference attendees`
+            page (string): The page number of the Apollo data that you want to retrieve. <br><br>Use this parameter in combination with the `per_page` parameter to make search results for navigable and improve the performance of the endpoint. <br><br>Example: `4`
+            per_page (string): The number of search results that should be returned for each page. Limited the number of results per page improves the endpoint's performance. <br><br>Use the `page` parameter to search the different pages of data. <br><br>Example: `10`
+
+        Returns:
+            dict[str, Any]: 200
+
+        Raises:
+            HTTPError: Raised when the API request fails (e.g., non-2XX status code).
+            JSONDecodeError: Raised if the response body cannot be parsed as JSON.
+        """
+        request_body_data = None
+        url = f"{self.base_url}/emailer_campaigns/search"
+        query_params = {k: v for k, v in [('q_name', q_name), ('page', page), ('per_page', per_page)] if v is not None}
+        response = self._post(url, data=request_body_data, params=query_params, content_type='application/json')
+        response.raise_for_status()
+        if response.status_code == 204 or not response.content or not response.text.strip():
+            return None
+        try:
+            return response.json()
+        except ValueError:
+            return None                
 
     def list_tools(self):
         return [
@@ -1085,5 +1140,7 @@ class ApolloApp(APIApplication):
             self.get_a_list_of_users,
             self.get_a_list_of_email_accounts,
             self.get_a_list_of_all_liststags,
-            self.get_a_list_of_all_custom_fields
+            self.get_a_list_of_all_custom_fields,
+            self.view_deal,
+            self.search_for_sequences
         ]
